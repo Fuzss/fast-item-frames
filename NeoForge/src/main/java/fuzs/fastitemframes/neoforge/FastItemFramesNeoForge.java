@@ -1,17 +1,17 @@
-package fuzs.examplemod.neoforge;
+package fuzs.fastitemframes.neoforge;
 
-import fuzs.examplemod.ExampleMod;
+import fuzs.fastitemframes.FastItemFrames;
 import fuzs.puzzleslib.api.core.v1.ModConstructor;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLConstructModEvent;
 
-@Mod(ExampleMod.MOD_ID)
+@Mod(FastItemFrames.MOD_ID)
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
-public class ExampleModNeoForge {
+public class FastItemFramesNeoForge {
 
     @SubscribeEvent
     public static void onConstructMod(final FMLConstructModEvent evt) {
-        ModConstructor.construct(ExampleMod.MOD_ID, ExampleMod::new);
+        ModConstructor.construct(FastItemFrames.MOD_ID, FastItemFrames::new);
     }
 }
