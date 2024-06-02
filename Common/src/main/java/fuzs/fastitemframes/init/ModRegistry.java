@@ -1,15 +1,20 @@
 package fuzs.fastitemframes.init;
 
 import fuzs.fastitemframes.FastItemFrames;
-import fuzs.fastitemframes.world.item.ItemFrameItem;
+import fuzs.fastitemframes.capability.ItemFrameColorCapability;
 import fuzs.fastitemframes.world.level.block.ItemFrameBlock;
 import fuzs.fastitemframes.world.level.block.entity.ItemFrameBlockEntity;
 import fuzs.puzzleslib.api.block.v1.MutableSoundType;
+import fuzs.puzzleslib.api.capability.v3.CapabilityController;
+import fuzs.puzzleslib.api.capability.v3.data.EntityCapabilityKey;
+import fuzs.puzzleslib.api.capability.v3.data.SyncStrategy;
 import fuzs.puzzleslib.api.init.v3.registry.RegistryManager;
+import fuzs.puzzleslib.api.init.v3.tags.BoundTagFactory;
 import net.minecraft.core.Holder;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.item.Item;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -25,9 +30,10 @@ public class ModRegistry {
     public static final SoundType GLOW_ITEM_FRAME_SOUND_TYPE = MutableSoundType.copyOf(SoundType.WOOD)
             .setBreakSound(SoundEvents.GLOW_ITEM_FRAME_BREAK)
             .setPlaceSound(SoundEvents.GLOW_ITEM_FRAME_PLACE);
+
     static final RegistryManager REGISTRY = RegistryManager.from(FastItemFrames.MOD_ID);
     public static final Holder.Reference<Block> ITEM_FRAME_BLOCK = REGISTRY.registerBlock("item_frame",
-            () -> new ItemFrameBlock(EntityType.ITEM_FRAME,
+            () -> new ItemFrameBlock(Items.ITEM_FRAME,
                     BlockBehaviour.Properties.of()
                             .mapColor(MapColor.SAND)
                             .forceSolidOn()
@@ -40,13 +46,38 @@ public class ModRegistry {
                             .sound(ITEM_FRAME_SOUND_TYPE)
             )
     );
-    public static final Holder.Reference<Item> ITEM_FRAME_ITEM = REGISTRY.registerItem("item_frame",
-            () -> new ItemFrameItem(ITEM_FRAME_BLOCK.value(), new Item.Properties())
+    public static final Holder.Reference<Block> GLOW_ITEM_FRAME_BLOCK = REGISTRY.registerBlock("glow_item_frame",
+            () -> new ItemFrameBlock(Items.GLOW_ITEM_FRAME,
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.SAND)
+                            .forceSolidOn()
+                            .instrument(NoteBlockInstrument.BASS)
+                            .noCollission()
+                            .strength(1.0F)
+                            .ignitedByLava()
+                            .instabreak()
+                            .pushReaction(PushReaction.DESTROY)
+                            .sound(GLOW_ITEM_FRAME_SOUND_TYPE)
+            )
     );
     public static final Holder.Reference<BlockEntityType<ItemFrameBlockEntity>> ITEM_FRAME_BLOCK_ENTITY = REGISTRY.registerBlockEntityType(
             "item_frame",
-            () -> BlockEntityType.Builder.of(ItemFrameBlockEntity::new, ITEM_FRAME_BLOCK.value())
+            () -> BlockEntityType.Builder.of(ItemFrameBlockEntity::new,
+                    ITEM_FRAME_BLOCK.value(),
+                    GLOW_ITEM_FRAME_BLOCK.value()
+            )
     );
+
+    static final BoundTagFactory TAGS = BoundTagFactory.make(FastItemFrames.MOD_ID);
+    public static final TagKey<Block> ITEM_FRAMES_BLOCK_TAG = TAGS.registerBlockTag("item_frames");
+
+    static final CapabilityController CAPABILITIES = CapabilityController.from(FastItemFrames.MOD_ID);
+    public static final EntityCapabilityKey<ItemFrame, ItemFrameColorCapability> ITEM_FRAME_COLOR_CAPABILITY = CAPABILITIES.registerEntityCapability(
+            "item_frame_color",
+            ItemFrameColorCapability.class,
+            ItemFrameColorCapability::new,
+            ItemFrame.class
+    ).setSyncStrategy(SyncStrategy.TRACKING);
 
     public static void touch() {
 

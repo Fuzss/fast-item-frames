@@ -11,10 +11,10 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.phys.Vec3;
 
-public class ItemFrameRenderer implements BlockEntityRenderer<ItemFrameBlockEntity> {
+public class ItemFrameBlockRenderer implements BlockEntityRenderer<ItemFrameBlockEntity> {
     private final EntityRenderDispatcher entityRenderer;
 
-    public ItemFrameRenderer(BlockEntityRendererProvider.Context context) {
+    public ItemFrameBlockRenderer(BlockEntityRendererProvider.Context context) {
         this.entityRenderer = context.getEntityRenderer();
     }
 

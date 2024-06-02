@@ -1,1 +1,6 @@
 accessWidener   v2  named
+accessible  field   net/minecraft/world/entity/decoration/ItemFrame fixed   Z
+accessible  method  net/minecraft/world/entity/decoration/ItemFrame setDirection    (Lnet/minecraft/core/Direction;)V
+accessible  method  net/minecraft/world/entity/decoration/ItemFrame dropItem    (Lnet/minecraft/world/entity/Entity;Z)V
+accessible  method  net/minecraft/world/entity/decoration/ItemFrame getFrameItemStack   ()Lnet/minecraft/world/item/ItemStack;
+accessible  field   net/minecraft/world/item/HangingEntityItem  type    Lnet/minecraft/world/entity/EntityType;
