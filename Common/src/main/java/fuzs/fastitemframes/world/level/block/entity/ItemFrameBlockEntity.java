@@ -1,5 +1,6 @@
 package fuzs.fastitemframes.world.level.block.entity;
 
+import fuzs.fastitemframes.FastItemFrames;
 import fuzs.fastitemframes.init.ModRegistry;
 import fuzs.fastitemframes.world.level.block.ItemFrameBlock;
 import net.minecraft.core.BlockPos;
@@ -19,6 +20,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.OptionalInt;
 
 public class ItemFrameBlockEntity extends BlockEntity {
+    static final String TAG_ITEM_FRAME = FastItemFrames.id("item_frame").toString();
+
     @Nullable
     private ItemFrame itemFrame;
     @Nullable
@@ -32,11 +35,14 @@ public class ItemFrameBlockEntity extends BlockEntity {
 
     @Override
     public void load(CompoundTag tag) {
-        ItemFrame itemFrame = this.getEntityRepresentation(true);
-        if (itemFrame != null) {
-            this.initItemFrame(itemFrame, tag);
-        } else {
-            this.storedTag = tag.copy();
+        if (tag.contains(TAG_ITEM_FRAME, Tag.TAG_COMPOUND)) {
+            CompoundTag compoundTag = tag.getCompound(TAG_ITEM_FRAME);
+            ItemFrame itemFrame = this.getEntityRepresentation(true);
+            if (itemFrame != null) {
+                this.initItemFrame(itemFrame, compoundTag);
+            } else {
+                this.storedTag = compoundTag.copy();
+            }
         }
         this.color = tag.contains(DyeableLeatherItem.TAG_COLOR, Tag.TAG_INT) ?
                 tag.getInt(DyeableLeatherItem.TAG_COLOR) :
@@ -45,17 +51,27 @@ public class ItemFrameBlockEntity extends BlockEntity {
 
     @Override
     protected void saveAdditional(CompoundTag tag) {
-        ItemFrame itemFrame = this.getEntityRepresentation();
-        if (itemFrame != null) {
-            itemFrame.addAdditionalSaveData(tag);
-        } else if (this.storedTag != null) {
-            for (String key : this.storedTag.getAllKeys()) {
-                tag.put(key, this.storedTag.get(key));
-            }
+        CompoundTag itemFrameTag = this.getItemFrameTag();
+        if (itemFrameTag != null) {
+            tag.put(TAG_ITEM_FRAME, itemFrameTag);
         }
         if (this.color != null) {
             tag.putInt(DyeableLeatherItem.TAG_COLOR, this.color);
         }
+    }
+
+    @Nullable
+    private CompoundTag getItemFrameTag() {
+        ItemFrame itemFrame = this.getEntityRepresentation();
+        if (itemFrame != null) {
+            CompoundTag compoundTag = new CompoundTag();
+            itemFrame.addAdditionalSaveData(compoundTag);
+            return compoundTag;
+        } else if (this.storedTag != null) {
+            return this.storedTag;
+        }
+
+        return null;
     }
 
     @Override
@@ -71,7 +87,6 @@ public class ItemFrameBlockEntity extends BlockEntity {
     public void setColor(int color) {
         if (this.color == null || this.color != color) {
             this.color = color;
-            this.setChanged();
         }
     }
 
@@ -88,37 +103,29 @@ public class ItemFrameBlockEntity extends BlockEntity {
         return this.getBlockState().getValue(ItemFrameBlock.INVISIBLE);
     }
 
-    @Override
-    public void setChanged() {
-
+    public void markUpdated() {
         if (this.hasLevel()) {
+            this.getLevel().setBlock(this.getBlockPos(), this.getUpdatedBlockState(), 2);
+            this.setChanged();
+            this.getLevel().sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
+        }
+    }
 
-            ItemFrame itemFrame = this.getEntityRepresentation();
-            if (itemFrame != null) {
-                if (this.getBlockState().getValue(ItemFrameBlock.HAS_MAP) != itemFrame.hasFramedMap()) {
-                    BlockState blockState = this.getBlockState()
-                            .setValue(ItemFrameBlock.HAS_MAP, itemFrame.hasFramedMap());
-                    this.getLevel().setBlock(this.getBlockPos(), blockState, 2);
-                }
-                if (this.getBlockState().getValue(ItemFrameBlock.DYED) != this.getColor().isPresent()) {
-                    BlockState blockState = this.getBlockState()
-                            .setValue(ItemFrameBlock.DYED, this.getColor().isPresent());
-                    this.getLevel().setBlock(this.getBlockPos(), blockState, 2);
-                }
-                if (itemFrame.getItem().isEmpty()) {
-                    itemFrame.setRotation(0);
-                    if (this.getBlockState().getValue(ItemFrameBlock.INVISIBLE)) {
-                        BlockState blockState = this.getBlockState().setValue(ItemFrameBlock.INVISIBLE, false);
-                        this.getLevel().setBlock(this.getBlockPos(), blockState, 2);
-                    }
-                }
+    private BlockState getUpdatedBlockState() {
+
+        BlockState blockState = this.getBlockState();
+        ItemFrame itemFrame = this.getEntityRepresentation();
+        if (itemFrame != null) {
+
+            if (itemFrame.getItem().isEmpty() && blockState.getValue(ItemFrameBlock.INVISIBLE)) {
+                blockState = blockState.setValue(ItemFrameBlock.INVISIBLE, Boolean.FALSE);
             }
 
-            super.setChanged();
-
-            BlockState newBlockState = this.getLevel().getBlockState(this.getBlockPos());
-            this.getLevel().sendBlockUpdated(this.getBlockPos(), this.getBlockState(), newBlockState, 3);
+            return blockState.setValue(ItemFrameBlock.HAS_MAP, itemFrame.hasFramedMap())
+                    .setValue(ItemFrameBlock.DYED, this.getColor().isPresent());
         }
+
+        return blockState;
     }
 
     @Nullable

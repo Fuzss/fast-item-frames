@@ -1,17 +1,34 @@
 package fuzs.fastitemframes.client.renderer.blockentity;
 
+import com.google.common.collect.ImmutableMap;
 import com.mojang.blaze3d.vertex.PoseStack;
+import fuzs.fastitemframes.FastItemFrames;
 import fuzs.fastitemframes.world.level.block.entity.ItemFrameBlockEntity;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.Map;
+
 public class ItemFrameBlockRenderer implements BlockEntityRenderer<ItemFrameBlockEntity> {
+    public static final Map<ModelResourceLocation, ResourceLocation> ITEM_FRAME_BLOCK_MODELS = ImmutableMap.<ModelResourceLocation, ResourceLocation>builder()
+            .put(ModelResourceLocation.vanilla("item_frame", "map=false"), FastItemFrames.id("block/item_frame"))
+            .put(ModelResourceLocation.vanilla("glow_item_frame", "map=false"),
+                    FastItemFrames.id("block/glow_item_frame")
+            )
+            .put(ModelResourceLocation.vanilla("item_frame", "map=true"), FastItemFrames.id("block/item_frame_map"))
+            .put(ModelResourceLocation.vanilla("glow_item_frame", "map=true"),
+                    FastItemFrames.id("block/glow_item_frame_map")
+            )
+            .build();
+
     private final EntityRenderDispatcher entityRenderer;
 
     public ItemFrameBlockRenderer(BlockEntityRendererProvider.Context context) {

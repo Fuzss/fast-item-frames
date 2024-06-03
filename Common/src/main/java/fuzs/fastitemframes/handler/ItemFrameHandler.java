@@ -13,7 +13,6 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -28,7 +27,7 @@ public class ItemFrameHandler {
                 ItemStack itemStack = blockEntity.getItem();
                 if (!itemStack.isEmpty()) {
                     blockEntity.getEntityRepresentation().hurt(level.damageSources().playerAttack(player), 1.0F);
-                    blockEntity.setChanged();
+                    blockEntity.markUpdated();
                     return EventResult.INTERRUPT;
                 }
             }
@@ -39,19 +38,22 @@ public class ItemFrameHandler {
 
     public static EventResult onEntityLoad(Entity entity, ServerLevel level) {
         if (entity instanceof ItemFrame itemFrame) {
-            Block block = ItemFrameBlock.BY_ITEM.getOrDefault(itemFrame.getFrameItemStack().getItem(), Blocks.AIR);
             // require air, another item frame block might already be placed in this location, or a decorative item such as coral fans
-            if (level.isEmptyBlock(entity.blockPosition())) {
-                level.setBlock(entity.blockPosition(),
+            BlockPos blockPos = entity.blockPosition();
+            if (level.isEmptyBlock(blockPos)) {
+
+                Block block = ItemFrameBlock.BY_ITEM.getOrDefault(itemFrame.getFrameItemStack().getItem(), Blocks.AIR);
+                level.setBlock(blockPos,
                         block.defaultBlockState().setValue(ItemFrameBlock.FACING, itemFrame.getDirection()),
                         2
                 );
 
                 CompoundTag compoundTag = new CompoundTag();
                 itemFrame.addAdditionalSaveData(compoundTag);
-                if (level.getBlockEntity(entity.blockPosition()) instanceof ItemFrameBlockEntity blockEntity) {
+                if (level.getBlockEntity(blockPos) instanceof ItemFrameBlockEntity blockEntity) {
                     blockEntity.load(compoundTag);
                     ModRegistry.ITEM_FRAME_COLOR_CAPABILITY.get(itemFrame).getColor().ifPresent(blockEntity::setColor);
+                    blockEntity.markUpdated();
                 }
 
                 return EventResult.INTERRUPT;
@@ -81,5 +83,13 @@ public class ItemFrameHandler {
         }
 
         return EventResultHolder.pass();
+    }
+
+    public static EventResult onAttackEntity(Player player, Level level, InteractionHand interactionHand, Entity entity) {
+        if (entity instanceof ItemFrame itemFrame && !itemFrame.fixed && !itemFrame.getItem().isEmpty()) {
+            itemFrame.setInvisible(false);
+        }
+
+        return EventResult.PASS;
     }
 }

@@ -100,8 +100,9 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
                     return InteractionResult.sidedSuccess(level.isClientSide);
                 } else {
 
+                    if (itemFrame.getItem().isEmpty()) itemFrame.setRotation(0);
                     InteractionResult result = itemFrame.interact(player, hand);
-                    if (result.consumesAction()) blockEntity.setChanged();
+                    if (result.consumesAction()) blockEntity.markUpdated();
                     return result;
                 }
             }

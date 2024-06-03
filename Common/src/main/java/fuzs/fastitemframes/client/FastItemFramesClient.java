@@ -1,6 +1,5 @@
 package fuzs.fastitemframes.client;
 
-import com.google.common.collect.ImmutableMap;
 import fuzs.fastitemframes.FastItemFrames;
 import fuzs.fastitemframes.client.handler.ClientItemFrameInteractionHandler;
 import fuzs.fastitemframes.client.renderer.blockentity.ItemFrameBlockRenderer;
@@ -11,12 +10,9 @@ import fuzs.puzzleslib.api.client.core.v1.context.AdditionalModelsContext;
 import fuzs.puzzleslib.api.client.core.v1.context.BlockEntityRenderersContext;
 import fuzs.puzzleslib.api.client.core.v1.context.ColorProvidersContext;
 import fuzs.puzzleslib.api.client.core.v1.context.ItemModelPropertiesContext;
-import fuzs.puzzleslib.api.client.event.v1.ModelEvents;
 import fuzs.puzzleslib.api.event.v1.entity.player.PlayerInteractEvents;
 import net.minecraft.client.color.block.BlockColor;
 import net.minecraft.client.color.item.ItemColor;
-import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.client.resources.model.ModelBaker;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
@@ -29,19 +25,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
 public class FastItemFramesClient implements ClientModConstructor {
     public static final ResourceLocation DYED_MODEL_PROPERTY = FastItemFrames.id("dyed");
-    private static final Map<ResourceLocation, ModelResourceLocation> ITEM_FRAME_BLOCK_MODELS = ImmutableMap.<ResourceLocation, ModelResourceLocation>builder()
-            .put(FastItemFrames.id("block/item_frame"), id("item_frame", "map=false"))
-            .put(FastItemFrames.id("block/glow_item_frame"), id("glow_item_frame", "map=false"))
-            .put(FastItemFrames.id("block/item_frame_map"), id("item_frame", "map=true"))
-            .put(FastItemFrames.id("block/glow_item_frame_map"), id("glow_item_frame", "map=true"))
-            .build();
 
     @Override
     public void onConstructMod() {
@@ -50,16 +35,11 @@ public class FastItemFramesClient implements ClientModConstructor {
 
     private static void registerEventHandlers() {
         PlayerInteractEvents.ATTACK_BLOCK.register(ClientItemFrameInteractionHandler::onAttackBlock);
-        ModelEvents.ADDITIONAL_BAKED_MODEL.register((BiConsumer<ResourceLocation, BakedModel> modelAdder, Function<ResourceLocation, BakedModel> modelGetter, Supplier<ModelBaker> modelBaker) -> {
-            ITEM_FRAME_BLOCK_MODELS.forEach((resourceLocation, modelResourceLocation) -> {
-                modelAdder.accept(modelResourceLocation, modelGetter.apply(resourceLocation));
-            });
-        });
     }
 
     @Override
     public void onRegisterAdditionalModels(AdditionalModelsContext context) {
-        ITEM_FRAME_BLOCK_MODELS.keySet().forEach(context::registerAdditionalModel);
+        ItemFrameBlockRenderer.ITEM_FRAME_BLOCK_MODELS.values().forEach(context::registerAdditionalModel);
     }
 
     @Override
