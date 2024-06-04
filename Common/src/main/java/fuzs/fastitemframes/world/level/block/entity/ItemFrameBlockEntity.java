@@ -33,16 +33,17 @@ public class ItemFrameBlockEntity extends BlockEntity {
         super(ModRegistry.ITEM_FRAME_BLOCK_ENTITY.value(), pos, blockState);
     }
 
+    public void load(ItemFrame itemFrame) {
+        CompoundTag compoundTag = new CompoundTag();
+        itemFrame.addAdditionalSaveData(compoundTag);
+        this.loadItemFrame(compoundTag);
+        ModRegistry.ITEM_FRAME_COLOR_CAPABILITY.get(itemFrame).getColor().ifPresent(this::setColor);
+    }
+
     @Override
     public void load(CompoundTag tag) {
         if (tag.contains(TAG_ITEM_FRAME, Tag.TAG_COMPOUND)) {
-            CompoundTag compoundTag = tag.getCompound(TAG_ITEM_FRAME);
-            ItemFrame itemFrame = this.getEntityRepresentation(true);
-            if (itemFrame != null) {
-                this.initItemFrame(itemFrame, compoundTag);
-            } else {
-                this.storedTag = compoundTag.copy();
-            }
+            this.loadItemFrame(tag.getCompound(TAG_ITEM_FRAME));
         }
         this.color = tag.contains(DyeableLeatherItem.TAG_COLOR, Tag.TAG_INT) ?
                 tag.getInt(DyeableLeatherItem.TAG_COLOR) :
@@ -150,7 +151,16 @@ public class ItemFrameBlockEntity extends BlockEntity {
         }
     }
 
-    void initItemFrame(ItemFrame itemFrame, @Nullable CompoundTag compoundTag) {
+    private void loadItemFrame(CompoundTag compoundTag) {
+        ItemFrame itemFrame = this.getEntityRepresentation(true);
+        if (itemFrame != null) {
+            this.initItemFrame(itemFrame, compoundTag);
+        } else {
+            this.storedTag = compoundTag.copy();
+        }
+    }
+
+    private void initItemFrame(ItemFrame itemFrame, @Nullable CompoundTag compoundTag) {
         itemFrame.setItem(ItemStack.EMPTY, false);
         BlockPos pos = this.getBlockPos();
         // set this first to prevent a warning when reading the wrong position from nbt

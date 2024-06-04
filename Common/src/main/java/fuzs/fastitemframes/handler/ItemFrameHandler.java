@@ -6,7 +6,7 @@ import fuzs.fastitemframes.world.level.block.entity.ItemFrameBlockEntity;
 import fuzs.puzzleslib.api.event.v1.core.EventResult;
 import fuzs.puzzleslib.api.event.v1.core.EventResultHolder;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.TickTask;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -48,12 +48,12 @@ public class ItemFrameHandler {
                         2
                 );
 
-                CompoundTag compoundTag = new CompoundTag();
-                itemFrame.addAdditionalSaveData(compoundTag);
                 if (level.getBlockEntity(blockPos) instanceof ItemFrameBlockEntity blockEntity) {
-                    blockEntity.load(compoundTag);
-                    ModRegistry.ITEM_FRAME_COLOR_CAPABILITY.get(itemFrame).getColor().ifPresent(blockEntity::setColor);
-                    blockEntity.markUpdated();
+                    blockEntity.load(itemFrame);
+                    blockEntity.setChanged();
+                    // client caches the wrong block color when block entity data is synced in the same tick as the block being set
+                    // this will cause a brief flicker, but the color will show correctly after that
+                    level.getServer().tell(new TickTask(level.getServer().getTickCount(), blockEntity::markUpdated));
                 }
 
                 return EventResult.INTERRUPT;
