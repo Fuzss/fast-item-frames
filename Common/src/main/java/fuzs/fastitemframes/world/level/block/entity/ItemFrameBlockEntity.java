@@ -4,15 +4,18 @@ import fuzs.fastitemframes.FastItemFrames;
 import fuzs.fastitemframes.init.ModRegistry;
 import fuzs.fastitemframes.world.level.block.ItemFrameBlock;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.decoration.HangingEntity;
 import net.minecraft.world.entity.decoration.ItemFrame;
-import net.minecraft.world.item.DyeableLeatherItem;
 import net.minecraft.world.item.HangingEntityItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
@@ -20,6 +23,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.OptionalInt;
 
 public class ItemFrameBlockEntity extends BlockEntity {
+    static final String TAG_COLOR = FastItemFrames.id("color").toString();
     static final String TAG_ITEM_FRAME = FastItemFrames.id("item_frame").toString();
 
     @Nullable
@@ -37,27 +41,31 @@ public class ItemFrameBlockEntity extends BlockEntity {
         CompoundTag compoundTag = new CompoundTag();
         itemFrame.addAdditionalSaveData(compoundTag);
         this.loadItemFrame(compoundTag);
-        ModRegistry.ITEM_FRAME_COLOR_CAPABILITY.get(itemFrame).getColor().ifPresent(this::setColor);
+        if (ModRegistry.ITEM_FRAME_COLOR_ATTACHMENT_TYPE.has(itemFrame)) {
+            this.setColor(ModRegistry.ITEM_FRAME_COLOR_ATTACHMENT_TYPE.get(itemFrame));
+        }
     }
 
     @Override
-    public void load(CompoundTag tag) {
+    public void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
         if (tag.contains(TAG_ITEM_FRAME, Tag.TAG_COMPOUND)) {
             this.loadItemFrame(tag.getCompound(TAG_ITEM_FRAME));
         }
-        this.color = tag.contains(DyeableLeatherItem.TAG_COLOR, Tag.TAG_INT) ?
-                tag.getInt(DyeableLeatherItem.TAG_COLOR) :
+        this.color = tag.contains(TAG_COLOR, Tag.TAG_INT) ?
+                tag.getInt(TAG_COLOR) :
                 null;
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag) {
+    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
         CompoundTag itemFrameTag = this.getItemFrameTag();
         if (itemFrameTag != null) {
             tag.put(TAG_ITEM_FRAME, itemFrameTag);
         }
         if (this.color != null) {
-            tag.putInt(DyeableLeatherItem.TAG_COLOR, this.color);
+            tag.putInt(TAG_COLOR, this.color);
         }
     }
 
@@ -81,8 +89,30 @@ public class ItemFrameBlockEntity extends BlockEntity {
     }
 
     @Override
-    public CompoundTag getUpdateTag() {
-        return this.saveWithoutMetadata();
+    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        return this.saveWithoutMetadata(registries);
+    }
+
+    @Override
+    protected void applyImplicitComponents(BlockEntity.DataComponentInput componentInput) {
+        super.applyImplicitComponents(componentInput);
+        DyedItemColor dyedItemColor = componentInput.get(DataComponents.DYED_COLOR);
+        if (dyedItemColor != null) {
+            this.color = dyedItemColor.rgb();
+        }
+    }
+
+    @Override
+    protected void collectImplicitComponents(DataComponentMap.Builder components) {
+        super.collectImplicitComponents(components);
+        if (this.color != null) {
+            components.set(DataComponents.DYED_COLOR, new DyedItemColor(this.color, true));
+        }
+    }
+
+    @Override
+    public void removeComponentsFromTag(CompoundTag tag) {
+        tag.remove(TAG_COLOR);
     }
 
     public void setColor(int color) {

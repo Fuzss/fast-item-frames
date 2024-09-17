@@ -13,22 +13,18 @@
           "type": "minecraft:item",
           "functions": [
             {
-              "function": "minecraft:copy_nbt",
-              "ops": [
-                {
-                  "op": "replace",
-                  "source": "color",
-                  "target": "display.color"
-                }
+              "function": "minecraft:copy_components",
+              "include": [
+                "minecraft:dyed_color"
               ],
               "source": "block_entity"
             }
           ],
-          "name": "minecraft:glow_item_frame"
+          "name": "minecraft:item_frame"
         }
       ],
       "rolls": 1.0
     }
   ],
-  "random_sequence": "fastitemframes:blocks/glow_item_frame"
+  "random_sequence": "fastitemframes:blocks/item_frame"
 }

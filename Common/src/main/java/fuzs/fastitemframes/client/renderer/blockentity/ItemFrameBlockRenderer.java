@@ -12,6 +12,7 @@ import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.phys.BlockHitResult;
@@ -62,7 +63,7 @@ public class ItemFrameBlockRenderer implements BlockEntityRenderer<ItemFrameBloc
                 }
 
                 if (this.shouldShowName(blockEntity, itemFrame)) {
-                    renderer.renderNameTag(itemFrame, itemFrame.getDisplayName(), poseStack, buffer, packedLight);
+                    renderer.renderNameTag(itemFrame, itemFrame.getDisplayName(), poseStack, buffer, packedLight, partialTick);
                 }
 
                 renderer.render(itemFrame, 0.0F, partialTick, poseStack, buffer, packedLight);
@@ -82,7 +83,7 @@ public class ItemFrameBlockRenderer implements BlockEntityRenderer<ItemFrameBloc
     }
 
     protected boolean shouldShowName(ItemFrameBlockEntity blockEntity, ItemFrame entity) {
-        if (Minecraft.renderNames() && !entity.getItem().isEmpty() && entity.getItem().hasCustomHoverName()) {
+        if (Minecraft.renderNames() && !entity.getItem().isEmpty() && entity.getItem().has(DataComponents.CUSTOM_NAME)) {
             Minecraft minecraft = Minecraft.getInstance();
             HitResult hitResult = minecraft.hitResult;
             if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK && blockEntity.getBlockPos().equals((((BlockHitResult) hitResult).getBlockPos()))) {

@@ -13,13 +13,10 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.DyeableLeatherItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemUtils;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.LayeredCauldronBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class ItemFrameHandler {
@@ -94,26 +91,5 @@ public class ItemFrameHandler {
         }
 
         return EventResult.PASS;
-    }
-
-    public static InteractionResult itemFrameCauldronInteraction(BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, ItemStack itemStack) {
-        if (!(itemStack.getItem() instanceof DyeableLeatherItem item)) {
-            return InteractionResult.PASS;
-        } else {
-            if (!item.hasCustomColor(itemStack)) {
-                return InteractionResult.PASS;
-            } else {
-                if (!level.isClientSide) {
-                    ItemStack newItemStack = itemStack.copyWithCount(1);
-                    item.clearColor(newItemStack);
-                    player.setItemInHand(interactionHand,
-                            ItemUtils.createFilledResult(itemStack, player, newItemStack)
-                    );
-                    LayeredCauldronBlock.lowerFillLevel(blockState, level, blockPos);
-                }
-
-                return InteractionResult.sidedSuccess(level.isClientSide);
-            }
-        }
     }
 }

@@ -1,19 +1,20 @@
 package fuzs.fastitemframes.init;
 
+import com.mojang.serialization.Codec;
 import fuzs.fastitemframes.FastItemFrames;
-import fuzs.fastitemframes.capability.ItemFrameColorCapability;
 import fuzs.fastitemframes.world.level.block.ItemFrameBlock;
 import fuzs.fastitemframes.world.level.block.entity.ItemFrameBlockEntity;
+import fuzs.puzzleslib.api.attachment.v4.DataAttachmentRegistry;
+import fuzs.puzzleslib.api.attachment.v4.DataAttachmentType;
 import fuzs.puzzleslib.api.block.v1.MutableSoundType;
-import fuzs.puzzleslib.api.capability.v3.CapabilityController;
-import fuzs.puzzleslib.api.capability.v3.data.EntityCapabilityKey;
-import fuzs.puzzleslib.api.capability.v3.data.SyncStrategy;
 import fuzs.puzzleslib.api.init.v3.registry.RegistryManager;
-import fuzs.puzzleslib.api.init.v3.tags.BoundTagFactory;
+import fuzs.puzzleslib.api.init.v3.tags.TagFactory;
+import fuzs.puzzleslib.api.network.v3.PlayerSet;
 import net.minecraft.core.Holder;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
@@ -32,54 +33,37 @@ public class ModRegistry {
             .setPlaceSound(SoundEvents.GLOW_ITEM_FRAME_PLACE);
 
     static final RegistryManager REGISTRY = RegistryManager.from(FastItemFrames.MOD_ID);
-    public static final Holder.Reference<Block> ITEM_FRAME_BLOCK = REGISTRY.registerBlock("item_frame",
-            () -> new ItemFrameBlock(Items.ITEM_FRAME,
-                    BlockBehaviour.Properties.of()
-                            .mapColor(MapColor.SAND)
-                            .forceSolidOn()
-                            .instrument(NoteBlockInstrument.BASS)
-                            .noCollission()
-                            .strength(1.0F)
-                            .ignitedByLava()
-                            .instabreak()
-                            .pushReaction(PushReaction.DESTROY)
-                            .sound(ITEM_FRAME_SOUND_TYPE)
-            )
-    );
-    public static final Holder.Reference<Block> GLOW_ITEM_FRAME_BLOCK = REGISTRY.registerBlock("glow_item_frame",
-            () -> new ItemFrameBlock(Items.GLOW_ITEM_FRAME,
-                    BlockBehaviour.Properties.of()
-                            .mapColor(MapColor.SAND)
-                            .forceSolidOn()
-                            .instrument(NoteBlockInstrument.BASS)
-                            .noCollission()
-                            .strength(1.0F)
-                            .ignitedByLava()
-                            .instabreak()
-                            .pushReaction(PushReaction.DESTROY)
-                            .sound(GLOW_ITEM_FRAME_SOUND_TYPE)
-            )
-    );
-    public static final Holder.Reference<BlockEntityType<ItemFrameBlockEntity>> ITEM_FRAME_BLOCK_ENTITY = REGISTRY.registerBlockEntityType(
-            "item_frame",
-            () -> BlockEntityType.Builder.of(ItemFrameBlockEntity::new,
-                    ITEM_FRAME_BLOCK.value(),
-                    GLOW_ITEM_FRAME_BLOCK.value()
-            )
-    );
+    public static final Holder.Reference<Block> ITEM_FRAME_BLOCK = REGISTRY.registerBlock("item_frame", () -> new ItemFrameBlock(Items.ITEM_FRAME, BlockBehaviour.Properties.of()
+            .mapColor(MapColor.SAND)
+            .forceSolidOn()
+            .instrument(NoteBlockInstrument.BASS)
+            .noCollission()
+            .strength(1.0F)
+            .ignitedByLava()
+            .instabreak()
+            .pushReaction(PushReaction.DESTROY)
+            .sound(ITEM_FRAME_SOUND_TYPE)));
+    public static final Holder.Reference<Block> GLOW_ITEM_FRAME_BLOCK = REGISTRY.registerBlock("glow_item_frame", () -> new ItemFrameBlock(Items.GLOW_ITEM_FRAME, BlockBehaviour.Properties.of()
+            .mapColor(MapColor.SAND)
+            .forceSolidOn()
+            .instrument(NoteBlockInstrument.BASS)
+            .noCollission()
+            .strength(1.0F)
+            .ignitedByLava()
+            .instabreak()
+            .pushReaction(PushReaction.DESTROY)
+            .sound(GLOW_ITEM_FRAME_SOUND_TYPE)));
+    public static final Holder.Reference<BlockEntityType<ItemFrameBlockEntity>> ITEM_FRAME_BLOCK_ENTITY = REGISTRY.registerBlockEntityType("item_frame", () -> BlockEntityType.Builder.of(ItemFrameBlockEntity::new, ITEM_FRAME_BLOCK.value(), GLOW_ITEM_FRAME_BLOCK.value()));
 
-    static final BoundTagFactory TAGS = BoundTagFactory.make(FastItemFrames.MOD_ID);
+    static final TagFactory TAGS = TagFactory.make(FastItemFrames.MOD_ID);
     public static final TagKey<Block> ITEM_FRAMES_BLOCK_TAG = TAGS.registerBlockTag("item_frames");
 
-    static final CapabilityController CAPABILITIES = CapabilityController.from(FastItemFrames.MOD_ID);
-    public static final EntityCapabilityKey<ItemFrame, ItemFrameColorCapability> ITEM_FRAME_COLOR_CAPABILITY = CAPABILITIES.registerEntityCapability(
-            "item_frame_color",
-            ItemFrameColorCapability.class,
-            ItemFrameColorCapability::new,
-            ItemFrame.class
-    ).setSyncStrategy(SyncStrategy.TRACKING);
+    public static final DataAttachmentType<Entity, Integer> ITEM_FRAME_COLOR_ATTACHMENT_TYPE = DataAttachmentRegistry.<Integer>entityBuilder()
+            .persistent(Codec.INT)
+            .networkSynchronized(ByteBufCodecs.INT, PlayerSet::nearEntity)
+            .build(FastItemFrames.id("item_frame_color"));
 
     public static void touch() {
-
+        // NO-OP
     }
 }

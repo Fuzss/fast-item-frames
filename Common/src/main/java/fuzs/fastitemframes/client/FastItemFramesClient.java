@@ -15,11 +15,12 @@ import net.minecraft.client.color.block.BlockColor;
 import net.minecraft.client.color.item.ItemColor;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.DyeableLeatherItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -50,7 +51,7 @@ public class FastItemFramesClient implements ClientModConstructor {
     @Override
     public void onRegisterItemModelProperties(ItemModelPropertiesContext context) {
         context.registerItemProperty(DYED_MODEL_PROPERTY, (itemStack, clientLevel, livingEntity, i) -> {
-            return ((DyeableLeatherItem) itemStack.getItem()).hasCustomColor(itemStack) ? 1.0F : 0.0F;
+            return itemStack.has(DataComponents.DYED_COLOR) ? 1.0F : 0.0F;
         }, Items.ITEM_FRAME, Items.GLOW_ITEM_FRAME);
     }
 
@@ -63,22 +64,18 @@ public class FastItemFramesClient implements ClientModConstructor {
                 }
             }
 
-            return DyeableLeatherItem.DEFAULT_LEATHER_COLOR;
+            return DyedItemColor.LEATHER_COLOR;
         }, ModRegistry.ITEM_FRAME_BLOCK.value(), ModRegistry.GLOW_ITEM_FRAME_BLOCK.value());
     }
 
     @Override
     public void onRegisterItemColorProviders(ColorProvidersContext<Item, ItemColor> context) {
-        context.registerColorProvider((ItemStack stack, int tintIndex) -> {
-            if (tintIndex == 0 && ((DyeableLeatherItem) stack.getItem()).hasCustomColor(stack)) {
-                return ((DyeableLeatherItem) stack.getItem()).getColor(stack);
-            } else {
-                return -1;
-            }
+        context.registerColorProvider((ItemStack itemStack, int tintIndex) -> {
+            return tintIndex == 0 ? DyedItemColor.getOrDefault(itemStack, -1) : -1;
         }, Items.ITEM_FRAME, Items.GLOW_ITEM_FRAME);
     }
 
     public static ModelResourceLocation id(String path, String variant) {
-        return new ModelResourceLocation(FastItemFrames.MOD_ID, path, variant);
+        return new ModelResourceLocation(FastItemFrames.id(path), variant);
     }
 }

@@ -8,16 +8,18 @@ import fuzs.puzzleslib.api.core.v1.Proxy;
 import fuzs.puzzleslib.api.shape.v1.ShapesHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
-import net.minecraft.world.item.DyeableLeatherItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemFrameItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -85,7 +87,7 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     }
 
     @Override
-    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
 
         if (level.getBlockEntity(pos) instanceof ItemFrameBlockEntity blockEntity) {
 
@@ -97,18 +99,24 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
                     // support toggling invisibility via shift+right-clicking + empty hand
                     level.setBlock(pos, state.setValue(INVISIBLE, !state.getValue(INVISIBLE)), 2);
                     itemFrame.playSound(itemFrame.getRotateItemSound(), 1.0F, 1.0F);
-                    return InteractionResult.sidedSuccess(level.isClientSide);
+                    return ItemInteractionResult.sidedSuccess(level.isClientSide);
                 } else {
 
                     if (itemFrame.getItem().isEmpty()) itemFrame.setRotation(0);
                     InteractionResult result = itemFrame.interact(player, hand);
                     if (result.consumesAction()) blockEntity.markUpdated();
-                    return result;
+                    return switch (result) {
+                        case PASS -> ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+                        case SUCCESS, SUCCESS_NO_ITEM_USED -> ItemInteractionResult.SUCCESS;
+                        case FAIL -> ItemInteractionResult.FAIL;
+                        case CONSUME -> ItemInteractionResult.CONSUME;
+                        case CONSUME_PARTIAL -> ItemInteractionResult.CONSUME_PARTIAL;
+                    };
                 }
             }
         }
 
-        return InteractionResult.PASS;
+        return super.useItemOn(stack, state, level, pos, player, hand, hitResult);
     }
 
     @Override
@@ -261,7 +269,11 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
 
             if (itemStack.getItem() instanceof ItemFrameItem) {
 
-                setItemFrameColor(itemStack, blockEntity.getColor());
+                OptionalInt color = blockEntity.getColor();
+                if (color.isPresent()) {
+
+                    setItemFrameColor(itemStack, color.getAsInt());
+                }
             }
 
             return itemStack;
@@ -275,11 +287,8 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
         return this.asItem().getDescriptionId();
     }
 
-    public static ItemStack setItemFrameColor(ItemStack itemStack, OptionalInt color) {
-        if (color.isPresent()) {
-            ((DyeableLeatherItem) itemStack.getItem()).setColor(itemStack, color.getAsInt());
-        }
-
+    public static ItemStack setItemFrameColor(ItemStack itemStack, int color) {
+        itemStack.set(DataComponents.DYED_COLOR, new DyedItemColor(color, true));
         return itemStack;
     }
 }

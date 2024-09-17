@@ -6,7 +6,6 @@
   "mixins": [
     "GlowItemFrameMixin",
     "HangingEntityItemMixin",
-    "ItemFrameItemMixin",
     "ItemFrameMixin"
   ],
   "client": [
