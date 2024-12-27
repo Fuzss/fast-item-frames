@@ -5,6 +5,7 @@ import fuzs.fastitemframes.world.level.block.ItemFrameBlock;
 import fuzs.fastitemframes.world.level.block.entity.ItemFrameBlockEntity;
 import fuzs.puzzleslib.api.event.v1.core.EventResult;
 import fuzs.puzzleslib.api.event.v1.core.EventResultHolder;
+import fuzs.puzzleslib.api.util.v1.InteractionResultHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.TickTask;
 import net.minecraft.server.level.ServerLevel;
@@ -26,7 +27,8 @@ public class ItemFrameHandler {
             if (level.getBlockEntity(pos) instanceof ItemFrameBlockEntity blockEntity) {
                 ItemStack itemStack = blockEntity.getItem();
                 if (!itemStack.isEmpty()) {
-                    blockEntity.getEntityRepresentation().hurt(level.damageSources().playerAttack(player), 1.0F);
+                    blockEntity.getEntityRepresentation()
+                            .hurtServer(level, level.damageSources().playerAttack(player), 1.0F);
                     blockEntity.markUpdated();
                     return EventResult.INTERRUPT;
                 }
@@ -45,15 +47,15 @@ public class ItemFrameHandler {
                 Block block = ItemFrameBlock.BY_ITEM.getOrDefault(itemFrame.getFrameItemStack().getItem(), Blocks.AIR);
                 level.setBlock(blockPos,
                         block.defaultBlockState().setValue(ItemFrameBlock.FACING, itemFrame.getDirection()),
-                        2
-                );
+                        2);
 
                 if (level.getBlockEntity(blockPos) instanceof ItemFrameBlockEntity blockEntity) {
                     blockEntity.load(itemFrame);
                     blockEntity.setChanged();
                     // client caches the wrong block color when block entity data is synced in the same tick as the block being set
                     // this will cause a brief flicker, but the color will show correctly after that
-                    level.getServer().tell(new TickTask(level.getServer().getTickCount(), blockEntity::markUpdated));
+                    level.getServer()
+                            .schedule(new TickTask(level.getServer().getTickCount(), blockEntity::markUpdated));
                 }
 
                 return EventResult.INTERRUPT;
@@ -74,7 +76,7 @@ public class ItemFrameHandler {
                     // support toggling invisibility with empty hand + sneak+right-click just like for block
                     itemFrame.setInvisible(!itemFrame.isInvisible());
                     itemFrame.playSound(itemFrame.getRotateItemSound(), 1.0F, 1.0F);
-                    return EventResultHolder.interrupt(InteractionResult.sidedSuccess(level.isClientSide));
+                    return EventResultHolder.interrupt(InteractionResultHelper.sidedSuccess(level.isClientSide));
                 } else {
                     // don't allow sneak+right-clicking when hand not empty just like with the block
                     return EventResultHolder.interrupt(InteractionResult.PASS);

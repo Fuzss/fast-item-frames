@@ -5,14 +5,16 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import fuzs.fastitemframes.world.level.block.entity.ItemFrameBlockEntity;
 import fuzs.puzzleslib.api.core.v1.ModLoaderEnvironment;
 import fuzs.puzzleslib.api.core.v1.Proxy;
-import fuzs.puzzleslib.api.shape.v1.ShapesHelper;
+import fuzs.puzzleslib.api.util.v1.InteractionResultHelper;
+import fuzs.puzzleslib.api.util.v1.ShapesHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
@@ -23,15 +25,15 @@ import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.ScheduledTickAccess;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
@@ -48,9 +50,8 @@ import java.util.OptionalInt;
 public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterloggedBlock {
     public static final MapCodec<ItemFrameBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
             BuiltInRegistries.ITEM.byNameCodec().fieldOf("item").forGetter(itemFrame -> itemFrame.item),
-            propertiesCodec()
-    ).apply(instance, ItemFrameBlock::new));
-    public static final DirectionProperty FACING = BlockStateProperties.FACING;
+            propertiesCodec()).apply(instance, ItemFrameBlock::new));
+    public static final EnumProperty<Direction> FACING = BlockStateProperties.FACING;
     public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
     public static final BooleanProperty INVISIBLE = BooleanProperty.create("invisible");
     public static final BooleanProperty HAS_MAP = BooleanProperty.create("has_map");
@@ -87,7 +88,7 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     }
 
     @Override
-    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
+    protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
 
         if (level.getBlockEntity(pos) instanceof ItemFrameBlockEntity blockEntity) {
 
@@ -99,19 +100,13 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
                     // support toggling invisibility via shift+right-clicking + empty hand
                     level.setBlock(pos, state.setValue(INVISIBLE, !state.getValue(INVISIBLE)), 2);
                     itemFrame.playSound(itemFrame.getRotateItemSound(), 1.0F, 1.0F);
-                    return ItemInteractionResult.sidedSuccess(level.isClientSide);
+                    return InteractionResultHelper.sidedSuccess(level.isClientSide);
                 } else {
 
                     if (itemFrame.getItem().isEmpty()) itemFrame.setRotation(0);
-                    InteractionResult result = itemFrame.interact(player, hand);
-                    if (result.consumesAction()) blockEntity.markUpdated();
-                    return switch (result) {
-                        case PASS -> ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-                        case SUCCESS, SUCCESS_NO_ITEM_USED -> ItemInteractionResult.SUCCESS;
-                        case FAIL -> ItemInteractionResult.FAIL;
-                        case CONSUME -> ItemInteractionResult.CONSUME;
-                        case CONSUME_PARTIAL -> ItemInteractionResult.CONSUME_PARTIAL;
-                    };
+                    InteractionResult interactionResult = itemFrame.interact(player, hand);
+                    if (interactionResult.consumesAction()) blockEntity.markUpdated();
+                    return interactionResult;
                 }
             }
         }
@@ -129,8 +124,8 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
         // to be able to implement BlockBehavior::onProjectileHit a projectile must be able to collide with this block
         if (context instanceof EntityCollisionContext entityCollisionContext &&
                 entityCollisionContext.getEntity() instanceof Projectile projectile) {
-            if (blockGetter instanceof Level level && projectile.mayInteract(level, pos) &&
-                    projectile.mayBreak(level)) {
+            if (blockGetter instanceof ServerLevel serverLevel && projectile.mayInteract(serverLevel, pos) &&
+                    projectile.mayBreak(serverLevel)) {
                 return this.getShape(state, blockGetter, pos, context);
             }
         }
@@ -157,16 +152,17 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     }
 
     @Override
-    public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor level, BlockPos pos, BlockPos neighborPos) {
+    protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess scheduledTickAccess, BlockPos pos, Direction direction, BlockPos neighborPos, BlockState neighborState, RandomSource random) {
+
         if (direction.getOpposite() == state.getValue(FACING) && !state.canSurvive(level, pos)) {
             return Blocks.AIR.defaultBlockState();
         }
 
         if (state.getValue(WATERLOGGED)) {
-            level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
+            scheduledTickAccess.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
         }
 
-        return super.updateShape(state, direction, neighborState, level, pos, neighborPos);
+        return super.updateShape(state, level, scheduledTickAccess, pos, direction, neighborPos, neighborState, random);
     }
 
     @Override
@@ -207,8 +203,8 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     @Override
     public void onProjectileHit(Level level, BlockState state, BlockHitResult hit, Projectile projectile) {
         BlockPos blockPos = hit.getBlockPos();
-        if (!level.isClientSide && !this.isFixed(level, blockPos) && projectile.mayInteract(level, blockPos) &&
-                projectile.mayBreak(level)) {
+        if (level instanceof ServerLevel serverLevel && !this.isFixed(level, blockPos) &&
+                projectile.mayInteract(serverLevel, blockPos) && projectile.mayBreak(serverLevel)) {
             level.destroyBlock(blockPos, true, projectile);
             // update potentially attached comparators
             level.updateNeighborsAt(blockPos, this);
@@ -219,8 +215,9 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
         if (!state.is(newState.getBlock())) {
-            if (level.getBlockEntity(pos) instanceof ItemFrameBlockEntity blockEntity) {
-                blockEntity.getEntityRepresentation().dropItem(null, false);
+            if (level instanceof ServerLevel serverLevel &&
+                    level.getBlockEntity(pos) instanceof ItemFrameBlockEntity blockEntity) {
+                blockEntity.getEntityRepresentation().dropItem(serverLevel, null, false);
                 // not sure if this is necessary since the block entity is about to be deleted as well
                 blockEntity.setChanged();
             }
@@ -253,7 +250,8 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
 
             ItemStack itemStack = null;
             // it's fine to use proxy value as this is only called client-side
-            if (!Proxy.INSTANCE.hasControlDown() || ModLoaderEnvironment.INSTANCE.isClient() && !Proxy.INSTANCE.getClientPlayer().isCreative()) {
+            if (!Proxy.INSTANCE.hasControlDown() ||
+                    ModLoaderEnvironment.INSTANCE.isClient() && !Proxy.INSTANCE.getClientPlayer().isCreative()) {
 
                 ItemFrame itemFrame = blockEntity.getEntityRepresentation();
                 if (itemFrame != null) {
@@ -280,11 +278,6 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
         }
 
         return super.getCloneItemStack(level, pos, state);
-    }
-
-    @Override
-    public String getDescriptionId() {
-        return this.asItem().getDescriptionId();
     }
 
     public static ItemStack setItemFrameColor(ItemStack itemStack, int color) {

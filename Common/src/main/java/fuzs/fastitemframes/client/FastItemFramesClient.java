@@ -1,7 +1,7 @@
 package fuzs.fastitemframes.client;
 
 import fuzs.fastitemframes.FastItemFrames;
-import fuzs.fastitemframes.client.handler.ClientItemFrameInteractionHandler;
+import fuzs.fastitemframes.client.handler.ClientEventHandler;
 import fuzs.fastitemframes.client.renderer.blockentity.ItemFrameBlockRenderer;
 import fuzs.fastitemframes.init.ModRegistry;
 import fuzs.fastitemframes.world.level.block.entity.ItemFrameBlockEntity;
@@ -10,6 +10,7 @@ import fuzs.puzzleslib.api.client.core.v1.context.AdditionalModelsContext;
 import fuzs.puzzleslib.api.client.core.v1.context.BlockEntityRenderersContext;
 import fuzs.puzzleslib.api.client.core.v1.context.ColorProvidersContext;
 import fuzs.puzzleslib.api.client.core.v1.context.ItemModelPropertiesContext;
+import fuzs.puzzleslib.api.client.event.v1.renderer.ExtractRenderStateCallbackV2;
 import fuzs.puzzleslib.api.event.v1.entity.player.PlayerInteractEvents;
 import net.minecraft.client.color.block.BlockColor;
 import net.minecraft.client.color.item.ItemColor;
@@ -35,7 +36,8 @@ public class FastItemFramesClient implements ClientModConstructor {
     }
 
     private static void registerEventHandlers() {
-        PlayerInteractEvents.ATTACK_BLOCK.register(ClientItemFrameInteractionHandler::onAttackBlock);
+        PlayerInteractEvents.ATTACK_BLOCK.register(ClientEventHandler::onAttackBlock);
+        ExtractRenderStateCallbackV2.EVENT.register(ClientEventHandler::onExtractRenderState);
     }
 
     @Override

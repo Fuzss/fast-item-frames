@@ -10,6 +10,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.decoration.HangingEntity;
 import net.minecraft.world.entity.decoration.ItemFrame;
@@ -52,9 +53,7 @@ public class ItemFrameBlockEntity extends BlockEntity {
         if (tag.contains(TAG_ITEM_FRAME, Tag.TAG_COMPOUND)) {
             this.loadItemFrame(tag.getCompound(TAG_ITEM_FRAME));
         }
-        this.color = tag.contains(TAG_COLOR, Tag.TAG_INT) ?
-                tag.getInt(TAG_COLOR) :
-                null;
+        this.color = tag.contains(TAG_COLOR, Tag.TAG_INT) ? tag.getInt(TAG_COLOR) : null;
     }
 
     @Override
@@ -172,7 +171,7 @@ public class ItemFrameBlockEntity extends BlockEntity {
                     .getBlock()
                     .asItem()).type;
 
-            ItemFrame itemFrame = (ItemFrame) type.create(this.getLevel());
+            ItemFrame itemFrame = (ItemFrame) type.create(this.getLevel(), EntitySpawnReason.LOAD);
             if (!skipInit) this.initItemFrame(itemFrame, this.storedTag);
             this.storedTag = null;
             return this.itemFrame = itemFrame;
