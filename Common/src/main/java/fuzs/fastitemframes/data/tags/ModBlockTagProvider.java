@@ -1,4 +1,4 @@
-package fuzs.fastitemframes.data;
+package fuzs.fastitemframes.data.tags;
 
 import fuzs.fastitemframes.init.ModRegistry;
 import fuzs.puzzleslib.api.data.v2.core.DataProviderContext;
@@ -16,9 +16,9 @@ public class ModBlockTagProvider extends AbstractTagProvider<Block> {
 
     @Override
     public void addTags(HolderLookup.Provider registries) {
-        this.add(BlockTags.MINEABLE_WITH_AXE)
+        this.tag(BlockTags.MINEABLE_WITH_AXE)
                 .add(ModRegistry.ITEM_FRAME_BLOCK.value(), ModRegistry.GLOW_ITEM_FRAME_BLOCK.value());
-        this.add(ModRegistry.ITEM_FRAMES_BLOCK_TAG)
+        this.tag(ModRegistry.ITEM_FRAMES_BLOCK_TAG)
                 .add(ModRegistry.ITEM_FRAME_BLOCK.value(), ModRegistry.GLOW_ITEM_FRAME_BLOCK.value());
     }
 }

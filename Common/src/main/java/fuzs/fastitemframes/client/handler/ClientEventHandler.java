@@ -3,7 +3,7 @@ package fuzs.fastitemframes.client.handler;
 import fuzs.fastitemframes.FastItemFrames;
 import fuzs.fastitemframes.init.ModRegistry;
 import fuzs.fastitemframes.world.level.block.entity.ItemFrameBlockEntity;
-import fuzs.puzzleslib.api.client.util.v1.RenderPropertyKey;
+import fuzs.puzzleslib.api.client.renderer.v1.RenderPropertyKey;
 import fuzs.puzzleslib.api.event.v1.core.EventResult;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
@@ -45,6 +45,7 @@ public class ClientEventHandler {
                 RenderPropertyKey.setRenderProperty(entityRenderState,
                         COLOR_RENDER_PROPERTY_KEY,
                         ModRegistry.ITEM_FRAME_COLOR_ATTACHMENT_TYPE.get(entity));
+                // prevent rendering, so we can take over
                 entityRenderState.isInvisible = true;
             }
         }

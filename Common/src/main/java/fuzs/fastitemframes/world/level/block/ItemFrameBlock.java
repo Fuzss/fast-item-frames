@@ -244,9 +244,9 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     }
 
     @Override
-    public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
+    protected ItemStack getCloneItemStack(LevelReader level, BlockPos blockPos, BlockState blockState, boolean includeData) {
 
-        if (level.getBlockEntity(pos) instanceof ItemFrameBlockEntity blockEntity) {
+        if (level.getBlockEntity(blockPos) instanceof ItemFrameBlockEntity blockEntity) {
 
             ItemStack itemStack = null;
             // it's fine to use proxy value as this is only called client-side
@@ -262,7 +262,7 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
 
             if (itemStack == null) {
 
-                itemStack = super.getCloneItemStack(level, pos, state);
+                itemStack = super.getCloneItemStack(level, blockPos, blockState, includeData);
             }
 
             if (itemStack.getItem() instanceof ItemFrameItem) {
@@ -277,7 +277,7 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
             return itemStack;
         }
 
-        return super.getCloneItemStack(level, pos, state);
+        return super.getCloneItemStack(level, blockPos, blockState, includeData);
     }
 
     public static ItemStack setItemFrameColor(ItemStack itemStack, int color) {
