@@ -36,28 +36,34 @@ public class ItemFrameHandler {
         return EventResult.PASS;
     }
 
-    public static EventResult onEntityLoad(Entity entity, ServerLevel level) {
+    public static EventResult onEntityLoad(Entity entity, ServerLevel serverLevel) {
+
         if (entity instanceof ItemFrame itemFrame) {
-            // require air, another item frame block might already be placed in this location, or a decorative item such as coral fans
-            BlockPos blockPos = entity.blockPosition();
-            if (level.isEmptyBlock(blockPos)) {
 
-                Block block = ItemFrameBlock.BY_ITEM.getOrDefault(itemFrame.getFrameItemStack().getItem(), Blocks.AIR);
-                level.setBlock(blockPos,
-                        block.defaultBlockState().setValue(ItemFrameBlock.FACING, itemFrame.getDirection()),
-                        2
-                );
+            serverLevel.getServer().tell(new TickTask(serverLevel.getServer().getTickCount(), () -> {
 
-                if (level.getBlockEntity(blockPos) instanceof ItemFrameBlockEntity blockEntity) {
-                    blockEntity.load(itemFrame);
-                    blockEntity.setChanged();
-                    // client caches the wrong block color when block entity data is synced in the same tick as the block being set
-                    // this will cause a brief flicker, but the color will show correctly after that
-                    level.getServer().tell(new TickTask(level.getServer().getTickCount(), blockEntity::markUpdated));
+                // require air, another item frame block might already be placed in this location, or a decorative item such as coral fans
+                BlockPos blockPos = entity.blockPosition();
+                if (serverLevel.isEmptyBlock(blockPos)) {
+
+                    Block block = ItemFrameBlock.BY_ITEM.getOrDefault(itemFrame.getFrameItemStack().getItem(),
+                            Blocks.AIR);
+                    serverLevel.setBlock(blockPos,
+                            block.defaultBlockState().setValue(ItemFrameBlock.FACING, itemFrame.getDirection()),
+                            2);
+
+                    if (serverLevel.getBlockEntity(blockPos) instanceof ItemFrameBlockEntity blockEntity) {
+
+                        blockEntity.load(itemFrame);
+                        blockEntity.setChanged();
+                        // client caches the wrong block color when block entity data is synced in the same tick as the block being set
+                        // this will cause a brief flicker, but the color will show correctly after that
+                        blockEntity.markUpdated();
+                    }
+
+                    entity.discard();
                 }
-
-                return EventResult.INTERRUPT;
-            }
+            }));
         }
 
         return EventResult.PASS;
