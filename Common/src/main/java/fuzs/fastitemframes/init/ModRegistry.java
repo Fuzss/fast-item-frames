@@ -4,9 +4,9 @@ import fuzs.fastitemframes.FastItemFrames;
 import fuzs.fastitemframes.capability.ItemFrameColorCapability;
 import fuzs.fastitemframes.world.level.block.ItemFrameBlock;
 import fuzs.fastitemframes.world.level.block.entity.ItemFrameBlockEntity;
-import fuzs.puzzleslib.api.capability.v2.CapabilityController;
-import fuzs.puzzleslib.api.capability.v2.data.CapabilityKey;
-import fuzs.puzzleslib.api.capability.v2.data.SyncStrategy;
+import fuzs.puzzleslib.api.capability.v3.CapabilityController;
+import fuzs.puzzleslib.api.capability.v3.data.CapabilityKey;
+import fuzs.puzzleslib.api.capability.v3.data.SyncStrategy;
 import fuzs.puzzleslib.api.init.v3.RegistryManager;
 import fuzs.puzzleslib.api.init.v3.tags.BoundTagFactory;
 import net.minecraft.core.Holder;
@@ -69,7 +69,7 @@ public class ModRegistry {
             "item_frame_color",
             ItemFrameColorCapability.class,
             ItemFrameColorCapability::new,
-            ItemFrame.class).setSyncStrategy(SyncStrategy.SELF_AND_TRACKING);
+            ItemFrame.class).setSyncStrategy(SyncStrategy.TRACKING);
 
     public static void touch() {
 

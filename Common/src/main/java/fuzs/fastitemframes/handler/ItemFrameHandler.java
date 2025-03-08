@@ -57,7 +57,7 @@ public class ItemFrameHandler {
 
                     if (serverLevel.getBlockEntity(blockPos) instanceof ItemFrameBlockEntity blockEntity) {
 
-                        blockEntity.load(itemFrame);
+                        blockEntity.load(itemFrame, entity.getType());
                         blockEntity.setChanged();
                         // client caches the wrong block color when block entity data is synced in the same tick as the block being set
                         // this will cause a brief flicker, but the color will show correctly after that
@@ -113,8 +113,7 @@ public class ItemFrameHandler {
                     ItemStack newItemStack = itemStack.copyWithCount(1);
                     item.clearColor(newItemStack);
                     player.setItemInHand(interactionHand,
-                            ItemUtils.createFilledResult(itemStack, player, newItemStack)
-                    );
+                            ItemUtils.createFilledResult(itemStack, player, newItemStack));
                     LayeredCauldronBlock.lowerFillLevel(blockState, level, blockPos);
                 }
 

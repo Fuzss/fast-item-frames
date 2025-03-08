@@ -33,8 +33,6 @@ public class ModBlockLootProvider extends AbstractLootProviderV2.Blocks {
                                         .apply(CopyNbtFunction.copyData(ContextNbtProvider.BLOCK_ENTITY)
                                                 .copy(DyeableLeatherItem.TAG_COLOR,
                                                         DyeableLeatherItem.TAG_DISPLAY + "." +
-                                                                DyeableLeatherItem.TAG_COLOR
-                                                )))
-                ));
+                                                                DyeableLeatherItem.TAG_COLOR)))));
     }
 }

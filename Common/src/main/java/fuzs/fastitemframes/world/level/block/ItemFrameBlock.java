@@ -1,14 +1,12 @@
 package fuzs.fastitemframes.world.level.block;
 
-import com.mojang.serialization.MapCodec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import fuzs.fastitemframes.world.level.block.entity.ItemFrameBlockEntity;
 import fuzs.puzzleslib.api.core.v1.ModLoaderEnvironment;
 import fuzs.puzzleslib.api.core.v1.Proxy;
 import fuzs.puzzleslib.api.shapes.v1.ShapesHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.decoration.ItemFrame;
@@ -44,7 +42,7 @@ import java.util.OptionalInt;
 
 @SuppressWarnings("deprecation")
 public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterloggedBlock {
-//    public static final MapCodec<ItemFrameBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+    //    public static final MapCodec<ItemFrameBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
 //            BuiltInRegistries.ITEM.byNameCodec().fieldOf("item").forGetter(itemFrame -> itemFrame.item),
 //            propertiesCodec()
 //    ).apply(instance, ItemFrameBlock::new));
@@ -122,7 +120,7 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
         if (context instanceof EntityCollisionContext entityCollisionContext &&
                 entityCollisionContext.getEntity() instanceof Projectile projectile) {
             if (blockGetter instanceof Level level && projectile.mayInteract(level, pos) &&
-                    projectile.mayBreak(level)) {
+                    projectile.getType().is(EntityTypeTags.IMPACT_PROJECTILES)) {
                 return this.getShape(state, blockGetter, pos, context);
             }
         }
@@ -200,7 +198,7 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     public void onProjectileHit(Level level, BlockState state, BlockHitResult hit, Projectile projectile) {
         BlockPos blockPos = hit.getBlockPos();
         if (!level.isClientSide && !this.isFixed(level, blockPos) && projectile.mayInteract(level, blockPos) &&
-                projectile.mayBreak(level)) {
+                projectile.getType().is(EntityTypeTags.IMPACT_PROJECTILES)) {
             level.destroyBlock(blockPos, true, projectile);
             // update potentially attached comparators
             level.updateNeighborsAt(blockPos, this);
@@ -245,7 +243,8 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
 
             ItemStack itemStack = null;
             // it's fine to use proxy value as this is only called client-side
-            if (!Proxy.INSTANCE.hasControlDown() || ModLoaderEnvironment.INSTANCE.isClient() && !Proxy.INSTANCE.getClientPlayer().isCreative()) {
+            if (!Proxy.INSTANCE.hasControlDown() ||
+                    ModLoaderEnvironment.INSTANCE.isClient() && !Proxy.INSTANCE.getClientPlayer().isCreative()) {
 
                 ItemFrame itemFrame = blockEntity.getEntityRepresentation();
                 if (itemFrame != null) {

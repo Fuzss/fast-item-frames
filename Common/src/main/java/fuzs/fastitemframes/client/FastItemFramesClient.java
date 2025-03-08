@@ -34,7 +34,7 @@ public class FastItemFramesClient implements ClientModConstructor {
     }
 
     private static void registerEventHandlers() {
-        PlayerInteractEvents.ATTACK_BLOCK.register(ClientItemFrameInteractionHandler::onAttackBlock);
+        PlayerInteractEvents.ATTACK_BLOCK_V2.register(ClientItemFrameInteractionHandler::onAttackBlock);
     }
 
     @Override
