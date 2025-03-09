@@ -24,11 +24,15 @@ import net.minecraft.world.phys.Vec3;
 import java.util.Map;
 
 public class ItemFrameBlockRenderer implements BlockEntityRenderer<ItemFrameBlockEntity> {
+    /**
+     * Glow item frame entities should really use a separate block model, as the model used for the blocks has a set
+     * light emission, which the entity already applies separately though.
+     */
     public static final Map<ModelResourceLocation, ResourceLocation> ITEM_FRAME_BLOCK_MODELS = ImmutableMap.<ModelResourceLocation, ResourceLocation>builder()
-            .put(BlockStateModelLoader.FRAME_LOCATION, FastItemFrames.id("block/item_frame"))
-            .put(BlockStateModelLoader.GLOW_FRAME_LOCATION, FastItemFrames.id("block/glow_item_frame"))
-            .put(BlockStateModelLoader.MAP_FRAME_LOCATION, FastItemFrames.id("block/item_frame_map"))
-            .put(BlockStateModelLoader.GLOW_MAP_FRAME_LOCATION, FastItemFrames.id("block/glow_item_frame_map"))
+            .put(BlockStateModelLoader.FRAME_LOCATION, FastItemFrames.id("block/item_frame_dyed"))
+            .put(BlockStateModelLoader.GLOW_FRAME_LOCATION, FastItemFrames.id("block/glow_item_frame_dyed"))
+            .put(BlockStateModelLoader.MAP_FRAME_LOCATION, FastItemFrames.id("block/item_frame_map_dyed"))
+            .put(BlockStateModelLoader.GLOW_MAP_FRAME_LOCATION, FastItemFrames.id("block/glow_item_frame_map_dyed"))
             .build();
 
     private final EntityRenderDispatcher entityRenderDispatcher;

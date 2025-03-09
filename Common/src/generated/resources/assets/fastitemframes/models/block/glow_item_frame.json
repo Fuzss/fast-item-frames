@@ -1,7 +1,7 @@
 {
-  "parent": "fastitemframes:block/template_item_frame",
+  "parent": "fastitemframes:block/template_glow_item_frame",
   "textures": {
-    "back": "fastitemframes:block/glow_item_frame",
+    "back": "minecraft:block/glow_item_frame",
     "particle": "minecraft:block/birch_planks",
     "wood": "minecraft:block/birch_planks"
   }

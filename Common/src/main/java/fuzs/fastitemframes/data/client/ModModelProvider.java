@@ -29,10 +29,33 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
 public class ModModelProvider extends AbstractModelProvider {
     public static final TextureSlot WOOD = TextureSlot.create("wood");
-    public static final ModelTemplate TEMPLATE_ITEM_FRAME = ModelTemplateHelper.createBlockModelTemplate(FastItemFrames.id(
-            "template_item_frame"), WOOD, TextureSlot.BACK, TextureSlot.PARTICLE);
-    public static final ModelTemplate TEMPLATE_ITEM_FRAME_MAP = ModelTemplateHelper.createBlockModelTemplate(
-            FastItemFrames.id("template_item_frame_map"),
+    public static final ModelTemplate TEMPLATE_ITEM_FRAME_DYED = ModelTemplateHelper.createBlockModelTemplate(
+            FastItemFrames.id("template_item_frame_dyed"),
+            WOOD,
+            TextureSlot.BACK,
+            TextureSlot.PARTICLE);
+    public static final ModelTemplate TEMPLATE_ITEM_FRAME_MAP_DYED = ModelTemplateHelper.createBlockModelTemplate(
+            FastItemFrames.id("template_item_frame_map_dyed"),
+            WOOD,
+            TextureSlot.BACK,
+            TextureSlot.PARTICLE);
+    public static final ModelTemplate TEMPLATE_GLOW_ITEM_FRAME = ModelTemplateHelper.createBlockModelTemplate(
+            FastItemFrames.id("template_glow_item_frame"),
+            WOOD,
+            TextureSlot.BACK,
+            TextureSlot.PARTICLE);
+    public static final ModelTemplate TEMPLATE_GLOW_ITEM_FRAME_MAP = ModelTemplateHelper.createBlockModelTemplate(
+            FastItemFrames.id("template_glow_item_frame_map"),
+            WOOD,
+            TextureSlot.BACK,
+            TextureSlot.PARTICLE);
+    public static final ModelTemplate TEMPLATE_GLOW_ITEM_FRAME_DYED = ModelTemplateHelper.createBlockModelTemplate(
+            FastItemFrames.id("template_glow_item_frame_dyed"),
+            WOOD,
+            TextureSlot.BACK,
+            TextureSlot.PARTICLE);
+    public static final ModelTemplate TEMPLATE_GLOW_ITEM_FRAME_MAP_DYED = ModelTemplateHelper.createBlockModelTemplate(
+            FastItemFrames.id("template_glow_item_frame_map_dyed"),
             WOOD,
             TextureSlot.BACK,
             TextureSlot.PARTICLE);
@@ -42,15 +65,19 @@ public class ModModelProvider extends AbstractModelProvider {
     }
 
     public static TextureMapping createItemFrameMapping(Block block) {
+        return createItemFrameMapping(ModelLocationHelper.getBlockTexture(block));
+    }
+
+    public static TextureMapping createItemFrameMapping(ResourceLocation resourceLocation) {
         return new TextureMapping().put(WOOD, ModelLocationHelper.getBlockTexture(Blocks.BIRCH_PLANKS))
-                .put(TextureSlot.BACK, ModelLocationHelper.getBlockTexture(block))
+                .put(TextureSlot.BACK, resourceLocation)
                 .put(TextureSlot.PARTICLE, ModelLocationHelper.getBlockTexture(Blocks.BIRCH_PLANKS));
     }
 
     @Override
     public void addBlockModels(BlockModelGenerators blockModelGenerators) {
         this.createItemFrame(ModRegistry.ITEM_FRAME_BLOCK.value(), blockModelGenerators);
-        this.createItemFrame(ModRegistry.GLOW_ITEM_FRAME_BLOCK.value(), blockModelGenerators);
+        this.createGlowItemFrame(ModRegistry.GLOW_ITEM_FRAME_BLOCK.value(), blockModelGenerators);
     }
 
     public final void createItemFrame(Block block, BlockModelGenerators blockModelGenerators) {
@@ -58,13 +85,39 @@ public class ModModelProvider extends AbstractModelProvider {
                 ModelLocationHelper.getBlockName(block)));
         ResourceLocation mapModel = ModelLocationHelper.getBlockModel(ResourceLocationHelper.withDefaultNamespace(
                 ModelLocationHelper.getBlockName(block)), "_map");
-        ResourceLocation dyedBlockModel = TEMPLATE_ITEM_FRAME.create(block,
+        ResourceLocation dyedBlockModel = TEMPLATE_ITEM_FRAME_DYED.createWithSuffix(block,
+                "_dyed",
                 createItemFrameMapping(block),
                 blockModelGenerators.modelOutput);
-        ResourceLocation dyedMapModel = TEMPLATE_ITEM_FRAME_MAP.createWithSuffix(block,
+        ResourceLocation dyedMapModel = TEMPLATE_ITEM_FRAME_MAP_DYED.createWithSuffix(block,
+                "_map_dyed",
+                createItemFrameMapping(block),
+                blockModelGenerators.modelOutput);
+        this.createItemFrame(block, blockModel, mapModel, dyedBlockModel, dyedMapModel, blockModelGenerators);
+    }
+
+    public final void createGlowItemFrame(Block block, BlockModelGenerators blockModelGenerators) {
+        ResourceLocation blockModel = TEMPLATE_GLOW_ITEM_FRAME.create(block,
+                createItemFrameMapping(ModelLocationHelper.getBlockTexture(ResourceLocationHelper.withDefaultNamespace(
+                        ModelLocationHelper.getBlockName(block)))),
+                blockModelGenerators.modelOutput);
+        ResourceLocation mapModel = TEMPLATE_GLOW_ITEM_FRAME_MAP.createWithSuffix(block,
                 "_map",
+                createItemFrameMapping(ModelLocationHelper.getBlockModel(ResourceLocationHelper.withDefaultNamespace(
+                        ModelLocationHelper.getBlockName(block)))),
+                blockModelGenerators.modelOutput);
+        ResourceLocation dyedBlockModel = TEMPLATE_GLOW_ITEM_FRAME_DYED.createWithSuffix(block,
+                "_dyed",
                 createItemFrameMapping(block),
                 blockModelGenerators.modelOutput);
+        ResourceLocation dyedMapModel = TEMPLATE_GLOW_ITEM_FRAME_MAP_DYED.createWithSuffix(block,
+                "_map_dyed",
+                createItemFrameMapping(block),
+                blockModelGenerators.modelOutput);
+        this.createItemFrame(block, blockModel, mapModel, dyedBlockModel, dyedMapModel, blockModelGenerators);
+    }
+
+    public final void createItemFrame(Block block, ResourceLocation blockModel, ResourceLocation mapModel, ResourceLocation dyedBlockModel, ResourceLocation dyedMapModel, BlockModelGenerators blockModelGenerators) {
         ResourceLocation invisibleModel = ModelTemplates.PARTICLE_ONLY.create(ModelLocationHelper.getBlockModel(block,
                 "_invisible"), TextureMapping.particle(Blocks.BIRCH_PLANKS), blockModelGenerators.modelOutput);
         blockModelGenerators.blockStateOutput.accept(MultiVariantGenerator.multiVariant(block)

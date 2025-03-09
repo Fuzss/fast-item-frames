@@ -15,10 +15,14 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.CollisionContext;
 
 public class ItemFrameHandler {
 
@@ -44,26 +48,38 @@ public class ItemFrameHandler {
 
             serverLevel.getServer().schedule(new TickTask(serverLevel.getServer().getTickCount(), () -> {
 
-                // require air, another item frame block might already be placed in this location, or a decorative item such as coral fans
                 BlockPos blockPos = entity.blockPosition();
-                if (serverLevel.isEmptyBlock(blockPos)) {
+                // require air, another item frame block might already be placed in this location, or a decorative block
+                // do not check for replaceable blocks, will break parity with vanilla otherwise
+                if (serverLevel.isEmptyBlock(blockPos) || serverLevel.getBlockState(blockPos).is(Blocks.WATER)) {
 
+                    BlockHitResult blockHitResult = new BlockHitResult(new Vec3(0.5, 0.5, 0.5),
+                            itemFrame.getDirection(),
+                            blockPos.relative(itemFrame.getDirection().getOpposite()),
+                            false);
+                    BlockPlaceContext blockPlaceContext = new BlockPlaceContext(serverLevel,
+                            null,
+                            InteractionHand.MAIN_HAND,
+                            ItemStack.EMPTY,
+                            blockHitResult);
                     Block block = ItemFrameBlock.BY_ITEM.getOrDefault(itemFrame.getFrameItemStack().getItem(),
                             Blocks.AIR);
-                    serverLevel.setBlock(blockPos,
-                            block.defaultBlockState().setValue(ItemFrameBlock.FACING, itemFrame.getDirection()),
-                            2);
+                    BlockState blockState = block.getStateForPlacement(blockPlaceContext);
+                    if (blockState != null && blockState.canSurvive(serverLevel, blockPos) &&
+                            serverLevel.isUnobstructed(blockState, blockPos, CollisionContext.empty())) {
 
-                    if (serverLevel.getBlockEntity(blockPos) instanceof ItemFrameBlockEntity blockEntity) {
+                        serverLevel.setBlock(blockPos, blockState, 2);
+                        if (serverLevel.getBlockEntity(blockPos) instanceof ItemFrameBlockEntity blockEntity) {
 
-                        blockEntity.load(itemFrame);
-                        blockEntity.setChanged();
-                        // client caches the wrong block color when block entity data is synced in the same tick as the block being set
-                        // this will cause a brief flicker, but the color will show correctly after that
-                        blockEntity.markUpdated();
+                            blockEntity.load(itemFrame);
+                            blockEntity.setChanged();
+                            // client caches the wrong block color when block entity data is synced in the same tick as the block being set
+                            // this will cause a brief flicker, but the color will show correctly after that
+                            blockEntity.markUpdated();
+                        }
+
+                        entity.discard();
                     }
-
-                    entity.discard();
                 }
             }));
         }

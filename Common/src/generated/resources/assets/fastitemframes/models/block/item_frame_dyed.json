@@ -1,5 +1,5 @@
 {
-  "parent": "fastitemframes:block/template_item_frame_map",
+  "parent": "fastitemframes:block/template_item_frame_dyed",
   "textures": {
     "back": "fastitemframes:block/item_frame",
     "particle": "minecraft:block/birch_planks",

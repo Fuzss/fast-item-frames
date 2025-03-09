@@ -1,7 +1,7 @@
 {
   "variants": {
     "dyed=false,facing=down,has_map=false,invisible=false": {
-      "model": "minecraft:block/glow_item_frame",
+      "model": "fastitemframes:block/glow_item_frame",
       "x": 90,
       "y": 180
     },
@@ -11,7 +11,7 @@
       "y": 180
     },
     "dyed=false,facing=down,has_map=true,invisible=false": {
-      "model": "minecraft:block/glow_item_frame_map",
+      "model": "fastitemframes:block/glow_item_frame_map",
       "x": 90,
       "y": 180
     },
@@ -21,7 +21,7 @@
       "y": 180
     },
     "dyed=false,facing=east,has_map=false,invisible=false": {
-      "model": "minecraft:block/glow_item_frame",
+      "model": "fastitemframes:block/glow_item_frame",
       "y": 90
     },
     "dyed=false,facing=east,has_map=false,invisible=true": {
@@ -29,7 +29,7 @@
       "y": 90
     },
     "dyed=false,facing=east,has_map=true,invisible=false": {
-      "model": "minecraft:block/glow_item_frame_map",
+      "model": "fastitemframes:block/glow_item_frame_map",
       "y": 90
     },
     "dyed=false,facing=east,has_map=true,invisible=true": {
@@ -37,19 +37,19 @@
       "y": 90
     },
     "dyed=false,facing=north,has_map=false,invisible=false": {
-      "model": "minecraft:block/glow_item_frame"
+      "model": "fastitemframes:block/glow_item_frame"
     },
     "dyed=false,facing=north,has_map=false,invisible=true": {
       "model": "fastitemframes:block/glow_item_frame_invisible"
     },
     "dyed=false,facing=north,has_map=true,invisible=false": {
-      "model": "minecraft:block/glow_item_frame_map"
+      "model": "fastitemframes:block/glow_item_frame_map"
     },
     "dyed=false,facing=north,has_map=true,invisible=true": {
       "model": "fastitemframes:block/glow_item_frame_invisible"
     },
     "dyed=false,facing=south,has_map=false,invisible=false": {
-      "model": "minecraft:block/glow_item_frame",
+      "model": "fastitemframes:block/glow_item_frame",
       "y": 180
     },
     "dyed=false,facing=south,has_map=false,invisible=true": {
@@ -57,7 +57,7 @@
       "y": 180
     },
     "dyed=false,facing=south,has_map=true,invisible=false": {
-      "model": "minecraft:block/glow_item_frame_map",
+      "model": "fastitemframes:block/glow_item_frame_map",
       "y": 180
     },
     "dyed=false,facing=south,has_map=true,invisible=true": {
@@ -65,7 +65,7 @@
       "y": 180
     },
     "dyed=false,facing=up,has_map=false,invisible=false": {
-      "model": "minecraft:block/glow_item_frame",
+      "model": "fastitemframes:block/glow_item_frame",
       "x": 270,
       "y": 180
     },
@@ -75,7 +75,7 @@
       "y": 180
     },
     "dyed=false,facing=up,has_map=true,invisible=false": {
-      "model": "minecraft:block/glow_item_frame_map",
+      "model": "fastitemframes:block/glow_item_frame_map",
       "x": 270,
       "y": 180
     },
@@ -85,7 +85,7 @@
       "y": 180
     },
     "dyed=false,facing=west,has_map=false,invisible=false": {
-      "model": "minecraft:block/glow_item_frame",
+      "model": "fastitemframes:block/glow_item_frame",
       "y": 270
     },
     "dyed=false,facing=west,has_map=false,invisible=true": {
@@ -93,7 +93,7 @@
       "y": 270
     },
     "dyed=false,facing=west,has_map=true,invisible=false": {
-      "model": "minecraft:block/glow_item_frame_map",
+      "model": "fastitemframes:block/glow_item_frame_map",
       "y": 270
     },
     "dyed=false,facing=west,has_map=true,invisible=true": {
@@ -101,7 +101,7 @@
       "y": 270
     },
     "dyed=true,facing=down,has_map=false,invisible=false": {
-      "model": "fastitemframes:block/glow_item_frame",
+      "model": "fastitemframes:block/glow_item_frame_dyed",
       "x": 90,
       "y": 180
     },
@@ -111,7 +111,7 @@
       "y": 180
     },
     "dyed=true,facing=down,has_map=true,invisible=false": {
-      "model": "fastitemframes:block/glow_item_frame_map",
+      "model": "fastitemframes:block/glow_item_frame_map_dyed",
       "x": 90,
       "y": 180
     },
@@ -121,7 +121,7 @@
       "y": 180
     },
     "dyed=true,facing=east,has_map=false,invisible=false": {
-      "model": "fastitemframes:block/glow_item_frame",
+      "model": "fastitemframes:block/glow_item_frame_dyed",
       "y": 90
     },
     "dyed=true,facing=east,has_map=false,invisible=true": {
@@ -129,7 +129,7 @@
       "y": 90
     },
     "dyed=true,facing=east,has_map=true,invisible=false": {
-      "model": "fastitemframes:block/glow_item_frame_map",
+      "model": "fastitemframes:block/glow_item_frame_map_dyed",
       "y": 90
     },
     "dyed=true,facing=east,has_map=true,invisible=true": {
@@ -137,19 +137,19 @@
       "y": 90
     },
     "dyed=true,facing=north,has_map=false,invisible=false": {
-      "model": "fastitemframes:block/glow_item_frame"
+      "model": "fastitemframes:block/glow_item_frame_dyed"
     },
     "dyed=true,facing=north,has_map=false,invisible=true": {
       "model": "fastitemframes:block/glow_item_frame_invisible"
     },
     "dyed=true,facing=north,has_map=true,invisible=false": {
-      "model": "fastitemframes:block/glow_item_frame_map"
+      "model": "fastitemframes:block/glow_item_frame_map_dyed"
     },
     "dyed=true,facing=north,has_map=true,invisible=true": {
       "model": "fastitemframes:block/glow_item_frame_invisible"
     },
     "dyed=true,facing=south,has_map=false,invisible=false": {
-      "model": "fastitemframes:block/glow_item_frame",
+      "model": "fastitemframes:block/glow_item_frame_dyed",
       "y": 180
     },
     "dyed=true,facing=south,has_map=false,invisible=true": {
@@ -157,7 +157,7 @@
       "y": 180
     },
     "dyed=true,facing=south,has_map=true,invisible=false": {
-      "model": "fastitemframes:block/glow_item_frame_map",
+      "model": "fastitemframes:block/glow_item_frame_map_dyed",
       "y": 180
     },
     "dyed=true,facing=south,has_map=true,invisible=true": {
@@ -165,7 +165,7 @@
       "y": 180
     },
     "dyed=true,facing=up,has_map=false,invisible=false": {
-      "model": "fastitemframes:block/glow_item_frame",
+      "model": "fastitemframes:block/glow_item_frame_dyed",
       "x": 270,
       "y": 180
     },
@@ -175,7 +175,7 @@
       "y": 180
     },
     "dyed=true,facing=up,has_map=true,invisible=false": {
-      "model": "fastitemframes:block/glow_item_frame_map",
+      "model": "fastitemframes:block/glow_item_frame_map_dyed",
       "x": 270,
       "y": 180
     },
@@ -185,7 +185,7 @@
       "y": 180
     },
     "dyed=true,facing=west,has_map=false,invisible=false": {
-      "model": "fastitemframes:block/glow_item_frame",
+      "model": "fastitemframes:block/glow_item_frame_dyed",
       "y": 270
     },
     "dyed=true,facing=west,has_map=false,invisible=true": {
@@ -193,7 +193,7 @@
       "y": 270
     },
     "dyed=true,facing=west,has_map=true,invisible=false": {
-      "model": "fastitemframes:block/glow_item_frame_map",
+      "model": "fastitemframes:block/glow_item_frame_map_dyed",
       "y": 270
     },
     "dyed=true,facing=west,has_map=true,invisible=true": {
