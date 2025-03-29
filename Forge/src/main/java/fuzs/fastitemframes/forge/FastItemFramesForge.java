@@ -2,7 +2,8 @@ package fuzs.fastitemframes.forge;
 
 import fuzs.fastitemframes.FastItemFrames;
 import fuzs.fastitemframes.data.ModBlockLootProvider;
-import fuzs.fastitemframes.data.ModBlockTagProvider;
+import fuzs.fastitemframes.data.tags.ModBlockTagProvider;
+import fuzs.fastitemframes.data.tags.ModEntityTypeTagProvider;
 import fuzs.puzzleslib.api.core.v1.ModConstructor;
 import fuzs.puzzleslib.api.data.v2.core.DataProviderHelper;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -18,6 +19,7 @@ public class FastItemFramesForge {
         ModConstructor.construct(FastItemFrames.MOD_ID, FastItemFrames::new);
         DataProviderHelper.registerDataProviders(FastItemFrames.MOD_ID,
                 ModBlockLootProvider::new,
-                ModBlockTagProvider::new);
+                ModBlockTagProvider::new,
+                ModEntityTypeTagProvider::new);
     }
 }

@@ -34,11 +34,13 @@ abstract class HangingEntityItemMixin extends Item {
 
         // we need to set the color before adding the entity to the level,
         // so that our event can copy the color to the block entity if applicable
-        if (entity instanceof ItemFrame itemFrame && this instanceof DyeableLeatherItem item) {
-            ItemStack itemInHand = context.getItemInHand();
-            if (item.hasCustomColor(itemInHand)) {
-                capability = ModRegistry.ITEM_FRAME_COLOR_CAPABILITY.get(itemFrame);
-                capability.setColor(item.getColor(itemInHand));
+        if (entity.getType().is(ModRegistry.ITEM_FRAMES_ENTITY_TYPE_TAG) && entity instanceof ItemFrame itemFrame) {
+            if (this instanceof DyeableLeatherItem item) {
+                ItemStack itemInHand = context.getItemInHand();
+                if (item.hasCustomColor(itemInHand)) {
+                    capability = ModRegistry.ITEM_FRAME_COLOR_CAPABILITY.get(itemFrame);
+                    capability.setColor(item.getColor(itemInHand));
+                }
             }
         }
 

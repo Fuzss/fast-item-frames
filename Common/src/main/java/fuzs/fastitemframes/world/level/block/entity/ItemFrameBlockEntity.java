@@ -46,10 +46,10 @@ public class ItemFrameBlockEntity extends BlockEntity {
 
     @Override
     public void load(CompoundTag tag) {
-        if (tag.contains(TAG_ITEM_FRAME, Tag.TAG_COMPOUND)) {
+        if (tag.contains(TAG_ENTITY_TYPE, Tag.TAG_STRING)) {
             EntityType<?> entityType = BuiltInRegistries.ENTITY_TYPE.byNameCodec()
-                    .parse(NbtOps.INSTANCE, tag)
-                    .result()
+                    .parse(NbtOps.INSTANCE, tag.get(TAG_ENTITY_TYPE))
+                    .resultOrPartial(FastItemFrames.LOGGER::error)
                     .orElse(EntityType.ITEM_FRAME);
             this.loadItemFrame(tag.getCompound(TAG_ITEM_FRAME), entityType);
         }
@@ -148,14 +148,22 @@ public class ItemFrameBlockEntity extends BlockEntity {
     }
 
     private EntityType<?> getEntityType() {
-        Item item = this.getBlockState().getBlock().asItem();
-        return item instanceof HangingEntityItem hangingEntityItem ? hangingEntityItem.type : EntityType.ITEM_FRAME;
+        ItemFrame itemFrame = this.itemFrame;
+        if (itemFrame != null) {
+            return itemFrame.getType();
+        } else {
+            Item item = this.getBlockState().getBlock().asItem();
+            if (item instanceof HangingEntityItem hangingEntityItem) {
+                return hangingEntityItem.type;
+            } else {
+                return EntityType.ITEM_FRAME;
+            }
+        }
     }
 
     @Nullable
     public ItemFrame getEntityRepresentation(boolean skipInit, EntityType<?> entityType) {
         if (this.itemFrame == null && this.hasLevel()) {
-
             ItemFrame itemFrame = (ItemFrame) entityType.create(this.getLevel());
             if (!skipInit) this.initItemFrame(itemFrame, this.storedTag);
             this.storedTag = null;

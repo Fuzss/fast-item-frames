@@ -12,12 +12,14 @@ import fuzs.puzzleslib.api.init.v3.tags.BoundTagFactory;
 import net.minecraft.core.Holder;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
@@ -51,6 +53,7 @@ public class ModRegistry {
                             .instrument(NoteBlockInstrument.BASS)
                             .noCollission()
                             .strength(1.0F)
+                            .lightLevel((BlockState blockState) -> 1)
                             .ignitedByLava()
                             .instabreak()
                             .pushReaction(PushReaction.DESTROY)
@@ -63,6 +66,7 @@ public class ModRegistry {
 
     static final BoundTagFactory TAGS = BoundTagFactory.make(FastItemFrames.MOD_ID);
     public static final TagKey<Block> ITEM_FRAMES_BLOCK_TAG = TAGS.registerBlockTag("item_frames");
+    public static final TagKey<EntityType<?>> ITEM_FRAMES_ENTITY_TYPE_TAG = TAGS.registerEntityTypeTag("item_frames");
 
     static final CapabilityController CAPABILITIES = CapabilityController.from(FastItemFrames.MOD_ID);
     public static final CapabilityKey<ItemFrame, ItemFrameColorCapability> ITEM_FRAME_COLOR_CAPABILITY = CAPABILITIES.registerEntityCapability(
