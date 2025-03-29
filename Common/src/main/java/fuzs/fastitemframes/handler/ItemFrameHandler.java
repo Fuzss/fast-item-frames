@@ -18,7 +18,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemUtils;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -56,7 +55,7 @@ public class ItemFrameHandler {
 
                     if (serverLevel.getBlockEntity(blockPos) instanceof ItemFrameBlockEntity blockEntity) {
 
-                        blockEntity.load(itemFrame, entity.getType());
+                        blockEntity.load(itemFrame);
                         blockEntity.setChanged();
                         // client caches the wrong block color when block entity data is synced in the same tick as the block being set
                         // this will cause a brief flicker, but the color will show correctly after that
