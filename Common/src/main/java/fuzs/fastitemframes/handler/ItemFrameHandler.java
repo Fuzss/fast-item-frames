@@ -16,7 +16,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class ItemFrameHandler {
@@ -38,16 +37,15 @@ public class ItemFrameHandler {
 
     public static EventResult onEntityLoad(Entity entity, ServerLevel serverLevel) {
 
-        if (entity instanceof ItemFrame itemFrame) {
+        if (entity.getType().is(ModRegistry.ITEM_FRAMES_ENTITY_TYPE_TAG) && entity instanceof ItemFrame itemFrame) {
 
             serverLevel.getServer().tell(new TickTask(serverLevel.getServer().getTickCount(), () -> {
 
-                // require air, another item frame block might already be placed in this location, or a decorative item such as coral fans
+                Block block = ItemFrameBlock.BY_ITEM.get(itemFrame.getFrameItemStack().getItem());
                 BlockPos blockPos = entity.blockPosition();
-                if (serverLevel.isEmptyBlock(blockPos)) {
+                // require air, another item frame block might already be placed in this location, or a decorative item such as coral fans
+                if (block != null && serverLevel.isEmptyBlock(blockPos)) {
 
-                    Block block = ItemFrameBlock.BY_ITEM.getOrDefault(itemFrame.getFrameItemStack().getItem(),
-                            Blocks.AIR);
                     serverLevel.setBlock(blockPos,
                             block.defaultBlockState().setValue(ItemFrameBlock.FACING, itemFrame.getDirection()),
                             2);
@@ -70,7 +68,7 @@ public class ItemFrameHandler {
     }
 
     public static EventResultHolder<InteractionResult> onUseEntity(Player player, Level level, InteractionHand interactionHand, Entity entity) {
-        if (entity instanceof ItemFrame itemFrame) {
+        if (entity.getType().is(ModRegistry.ITEM_FRAMES_ENTITY_TYPE_TAG) && entity instanceof ItemFrame itemFrame) {
             if (!itemFrame.fixed && itemFrame.getItem().isEmpty()) {
                 itemFrame.setRotation(0);
             }
@@ -92,8 +90,10 @@ public class ItemFrameHandler {
     }
 
     public static EventResult onAttackEntity(Player player, Level level, InteractionHand interactionHand, Entity entity) {
-        if (entity instanceof ItemFrame itemFrame && !itemFrame.fixed && !itemFrame.getItem().isEmpty()) {
-            itemFrame.setInvisible(false);
+        if (entity.getType().is(ModRegistry.ITEM_FRAMES_ENTITY_TYPE_TAG) && entity instanceof ItemFrame itemFrame) {
+            if (!itemFrame.fixed && !itemFrame.getItem().isEmpty()) {
+                itemFrame.setInvisible(false);
+            }
         }
 
         return EventResult.PASS;
