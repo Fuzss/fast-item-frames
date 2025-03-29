@@ -166,11 +166,9 @@ public class ItemFrameBlockEntity extends BlockEntity {
     @Nullable
     public ItemFrame getEntityRepresentation(boolean skipInit) {
         if (this.itemFrame == null && this.hasLevel()) {
-
             EntityType<? extends HangingEntity> type = ((HangingEntityItem) this.getBlockState()
                     .getBlock()
                     .asItem()).type;
-
             ItemFrame itemFrame = (ItemFrame) type.create(this.getLevel(), EntitySpawnReason.LOAD);
             if (!skipInit) this.initItemFrame(itemFrame, this.storedTag);
             this.storedTag = null;

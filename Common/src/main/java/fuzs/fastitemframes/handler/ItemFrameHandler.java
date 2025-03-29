@@ -44,14 +44,16 @@ public class ItemFrameHandler {
 
     public static EventResult onEntityLoad(Entity entity, ServerLevel serverLevel) {
 
-        if (entity instanceof ItemFrame itemFrame) {
+        if (entity.getType().is(ModRegistry.ITEM_FRAMES_ENTITY_TYPE_TAG) && entity instanceof ItemFrame itemFrame) {
 
             serverLevel.getServer().schedule(new TickTask(serverLevel.getServer().getTickCount(), () -> {
 
+                Block block = ItemFrameBlock.BY_ITEM.get(itemFrame.getFrameItemStack().getItem());
                 BlockPos blockPos = entity.blockPosition();
                 // require air, another item frame block might already be placed in this location, or a decorative block
                 // do not check for replaceable blocks, will break parity with vanilla otherwise
-                if (serverLevel.isEmptyBlock(blockPos) || serverLevel.getBlockState(blockPos).is(Blocks.WATER)) {
+                if (block != null &&
+                        (serverLevel.isEmptyBlock(blockPos) || serverLevel.getBlockState(blockPos).is(Blocks.WATER))) {
 
                     BlockHitResult blockHitResult = new BlockHitResult(new Vec3(0.5, 0.5, 0.5),
                             itemFrame.getDirection(),
@@ -62,8 +64,6 @@ public class ItemFrameHandler {
                             InteractionHand.MAIN_HAND,
                             ItemStack.EMPTY,
                             blockHitResult);
-                    Block block = ItemFrameBlock.BY_ITEM.getOrDefault(itemFrame.getFrameItemStack().getItem(),
-                            Blocks.AIR);
                     BlockState blockState = block.getStateForPlacement(blockPlaceContext);
                     if (blockState != null && blockState.canSurvive(serverLevel, blockPos) &&
                             serverLevel.isUnobstructed(blockState, blockPos, CollisionContext.empty())) {
@@ -88,7 +88,7 @@ public class ItemFrameHandler {
     }
 
     public static EventResultHolder<InteractionResult> onUseEntity(Player player, Level level, InteractionHand interactionHand, Entity entity) {
-        if (entity instanceof ItemFrame itemFrame) {
+        if (entity.getType().is(ModRegistry.ITEM_FRAMES_ENTITY_TYPE_TAG) && entity instanceof ItemFrame itemFrame) {
             if (!itemFrame.fixed && itemFrame.getItem().isEmpty()) {
                 itemFrame.setRotation(0);
             }
@@ -110,8 +110,10 @@ public class ItemFrameHandler {
     }
 
     public static EventResult onAttackEntity(Player player, Level level, InteractionHand interactionHand, Entity entity) {
-        if (entity instanceof ItemFrame itemFrame && !itemFrame.fixed && !itemFrame.getItem().isEmpty()) {
-            itemFrame.setInvisible(false);
+        if (entity.getType().is(ModRegistry.ITEM_FRAMES_ENTITY_TYPE_TAG) && entity instanceof ItemFrame itemFrame) {
+            if (!itemFrame.fixed && !itemFrame.getItem().isEmpty()) {
+                itemFrame.setInvisible(false);
+            }
         }
 
         return EventResult.PASS;

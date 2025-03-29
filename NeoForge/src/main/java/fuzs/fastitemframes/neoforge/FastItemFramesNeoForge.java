@@ -3,6 +3,7 @@ package fuzs.fastitemframes.neoforge;
 import fuzs.fastitemframes.FastItemFrames;
 import fuzs.fastitemframes.data.ModBlockLootProvider;
 import fuzs.fastitemframes.data.tags.ModBlockTagProvider;
+import fuzs.fastitemframes.data.tags.ModEntityTypeTagProvider;
 import fuzs.fastitemframes.data.tags.ModItemTagProvider;
 import fuzs.puzzleslib.api.core.v1.ModConstructor;
 import fuzs.puzzleslib.neoforge.api.data.v2.core.DataProviderHelper;
@@ -16,6 +17,7 @@ public class FastItemFramesNeoForge {
         DataProviderHelper.registerDataProviders(FastItemFrames.MOD_ID,
                 ModBlockLootProvider::new,
                 ModBlockTagProvider::new,
-                ModItemTagProvider::new);
+                ModItemTagProvider::new,
+                ModEntityTypeTagProvider::new);
     }
 }

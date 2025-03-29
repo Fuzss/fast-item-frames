@@ -33,7 +33,8 @@ abstract class HangingEntityItemMixin extends Item {
     public void useOn(UseOnContext context, CallbackInfoReturnable<InteractionResult> callback, @Local HangingEntity hangingEntity) {
         // we need to set the color before adding the entity to the level,
         // so that our event can copy the color to the block entity if applicable
-        if (hangingEntity instanceof ItemFrame itemFrame) {
+        if (hangingEntity.getType().is(ModRegistry.ITEM_FRAMES_ENTITY_TYPE_TAG) &&
+                hangingEntity instanceof ItemFrame itemFrame) {
             ItemStack itemInHand = context.getItemInHand();
             if (itemInHand.is(ItemTags.DYEABLE) && itemInHand.has(DataComponents.DYED_COLOR)) {
                 int rgb = itemInHand.get(DataComponents.DYED_COLOR).rgb();
