@@ -1,17 +1,14 @@
 package fuzs.fastitemframes.client;
 
-import fuzs.fastitemframes.FastItemFrames;
 import fuzs.fastitemframes.client.handler.ClientEventHandler;
 import fuzs.fastitemframes.client.renderer.blockentity.ItemFrameBlockRenderer;
 import fuzs.fastitemframes.init.ModRegistry;
 import fuzs.fastitemframes.world.level.block.entity.ItemFrameBlockEntity;
 import fuzs.puzzleslib.api.client.core.v1.ClientModConstructor;
-import fuzs.puzzleslib.api.client.core.v1.context.AdditionalModelsContext;
 import fuzs.puzzleslib.api.client.core.v1.context.BlockColorsContext;
 import fuzs.puzzleslib.api.client.core.v1.context.BlockEntityRenderersContext;
 import fuzs.puzzleslib.api.client.event.v1.renderer.ExtractRenderStateCallback;
 import fuzs.puzzleslib.api.event.v1.entity.player.PlayerInteractEvents;
-import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.level.BlockAndTintGetter;
@@ -31,11 +28,6 @@ public class FastItemFramesClient implements ClientModConstructor {
     }
 
     @Override
-    public void onRegisterAdditionalModels(AdditionalModelsContext context) {
-        ItemFrameBlockRenderer.ITEM_FRAME_BLOCK_MODELS.values().forEach(context::registerAdditionalModel);
-    }
-
-    @Override
     public void onRegisterBlockEntityRenderers(BlockEntityRenderersContext context) {
         context.registerBlockEntityRenderer(ModRegistry.ITEM_FRAME_BLOCK_ENTITY.value(), ItemFrameBlockRenderer::new);
     }
@@ -51,9 +43,5 @@ public class FastItemFramesClient implements ClientModConstructor {
 
             return DyedItemColor.LEATHER_COLOR;
         }, ModRegistry.ITEM_FRAME_BLOCK.value(), ModRegistry.GLOW_ITEM_FRAME_BLOCK.value());
-    }
-
-    public static ModelResourceLocation id(String path, String variant) {
-        return new ModelResourceLocation(FastItemFrames.id(path), variant);
     }
 }

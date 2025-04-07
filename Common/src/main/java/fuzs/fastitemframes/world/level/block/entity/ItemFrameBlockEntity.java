@@ -5,11 +5,12 @@ import fuzs.fastitemframes.init.ModRegistry;
 import fuzs.fastitemframes.world.level.block.ItemFrameBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponentGetter;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.decoration.HangingEntity;
@@ -50,10 +51,10 @@ public class ItemFrameBlockEntity extends BlockEntity {
     @Override
     public void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
-        if (tag.contains(TAG_ITEM_FRAME, Tag.TAG_COMPOUND)) {
-            this.loadItemFrame(tag.getCompound(TAG_ITEM_FRAME));
+        if (tag.contains(TAG_ITEM_FRAME)) {
+            this.loadItemFrame(tag.getCompoundOrEmpty(TAG_ITEM_FRAME));
         }
-        this.color = tag.contains(TAG_COLOR, Tag.TAG_INT) ? tag.getInt(TAG_COLOR) : null;
+        this.color = tag.contains(TAG_COLOR) ? tag.getIntOr(TAG_COLOR, 0) : null;
     }
 
     @Override
@@ -93,9 +94,17 @@ public class ItemFrameBlockEntity extends BlockEntity {
     }
 
     @Override
-    protected void applyImplicitComponents(BlockEntity.DataComponentInput componentInput) {
-        super.applyImplicitComponents(componentInput);
-        DyedItemColor dyedItemColor = componentInput.get(DataComponents.DYED_COLOR);
+    public void preRemoveSideEffects(BlockPos blockPos, BlockState blockState) {
+        super.preRemoveSideEffects(blockPos, blockState);
+        this.getEntityRepresentation().dropItem((ServerLevel) this.level, null, false);
+        // not sure if this is necessary since the block entity is about to be deleted as well
+        this.setChanged();
+    }
+
+    @Override
+    protected void applyImplicitComponents(DataComponentGetter dataComponentGetter) {
+        super.applyImplicitComponents(dataComponentGetter);
+        DyedItemColor dyedItemColor = dataComponentGetter.get(DataComponents.DYED_COLOR);
         if (dyedItemColor != null) {
             this.color = dyedItemColor.rgb();
         }
@@ -105,7 +114,7 @@ public class ItemFrameBlockEntity extends BlockEntity {
     protected void collectImplicitComponents(DataComponentMap.Builder components) {
         super.collectImplicitComponents(components);
         if (this.color != null) {
-            components.set(DataComponents.DYED_COLOR, new DyedItemColor(this.color, true));
+            components.set(DataComponents.DYED_COLOR, new DyedItemColor(this.color));
         }
     }
 
@@ -151,7 +160,7 @@ public class ItemFrameBlockEntity extends BlockEntity {
                 blockState = blockState.setValue(ItemFrameBlock.INVISIBLE, Boolean.FALSE);
             }
 
-            return blockState.setValue(ItemFrameBlock.HAS_MAP, itemFrame.hasFramedMap())
+            return blockState.setValue(ItemFrameBlock.MAP, itemFrame.hasFramedMap())
                     .setValue(ItemFrameBlock.DYED, this.getColor().isPresent());
         }
 

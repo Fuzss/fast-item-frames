@@ -39,14 +39,14 @@ public class ClientEventHandler {
         return EventResult.PASS;
     }
 
-    public static void onExtractRenderState(Entity entity, EntityRenderState entityRenderState, float partialTick) {
-        if (entity instanceof ItemFrame && entityRenderState instanceof ItemFrameRenderState) {
-            if (!entityRenderState.isInvisible && ModRegistry.ITEM_FRAME_COLOR_ATTACHMENT_TYPE.has(entity)) {
-                RenderPropertyKey.setRenderProperty(entityRenderState,
+    public static void onExtractRenderState(Entity entity, EntityRenderState renderState, float partialTick) {
+        if (entity instanceof ItemFrame && renderState instanceof ItemFrameRenderState) {
+            if (!renderState.isInvisible && ModRegistry.ITEM_FRAME_COLOR_ATTACHMENT_TYPE.has(entity)) {
+                RenderPropertyKey.set(renderState,
                         COLOR_RENDER_PROPERTY_KEY,
                         ModRegistry.ITEM_FRAME_COLOR_ATTACHMENT_TYPE.get(entity));
                 // prevent rendering, so we can take over
-                entityRenderState.isInvisible = true;
+                renderState.isInvisible = true;
             }
         }
     }

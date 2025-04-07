@@ -1,5 +1,6 @@
 package fuzs.fastitemframes.data.client;
 
+import com.mojang.math.Quadrant;
 import fuzs.fastitemframes.FastItemFrames;
 import fuzs.fastitemframes.init.ModRegistry;
 import fuzs.fastitemframes.world.level.block.ItemFrameBlock;
@@ -13,9 +14,8 @@ import net.minecraft.client.data.models.BlockModelGenerators;
 import net.minecraft.client.data.models.ItemModelGenerators;
 import net.minecraft.client.data.models.blockstates.MultiVariantGenerator;
 import net.minecraft.client.data.models.blockstates.PropertyDispatch;
-import net.minecraft.client.data.models.blockstates.Variant;
-import net.minecraft.client.data.models.blockstates.VariantProperties;
 import net.minecraft.client.data.models.model.*;
+import net.minecraft.client.renderer.block.model.VariantMutator;
 import net.minecraft.client.renderer.item.ItemModel;
 import net.minecraft.client.renderer.item.properties.conditional.HasComponent;
 import net.minecraft.core.Direction;
@@ -59,6 +59,16 @@ public class ModModelProvider extends AbstractModelProvider {
             WOOD,
             TextureSlot.BACK,
             TextureSlot.PARTICLE);
+    public static final PropertyDispatch<VariantMutator> ROTATIONS_ITEM_FRAME_FACING = PropertyDispatch.modify(
+                    BlockStateProperties.FACING)
+            .select(Direction.DOWN,
+                    VariantMutator.X_ROT.withValue(Quadrant.R90).then(VariantMutator.Y_ROT.withValue(Quadrant.R180)))
+            .select(Direction.UP,
+                    VariantMutator.X_ROT.withValue(Quadrant.R270).then(VariantMutator.Y_ROT.withValue(Quadrant.R180)))
+            .select(Direction.NORTH, BlockModelGenerators.NOP)
+            .select(Direction.SOUTH, VariantMutator.Y_ROT.withValue(Quadrant.R180))
+            .select(Direction.WEST, VariantMutator.Y_ROT.withValue(Quadrant.R270))
+            .select(Direction.EAST, VariantMutator.Y_ROT.withValue(Quadrant.R90));
 
     public ModModelProvider(DataProviderContext context) {
         super(context);
@@ -120,41 +130,16 @@ public class ModModelProvider extends AbstractModelProvider {
     public final void createItemFrame(Block block, ResourceLocation blockModel, ResourceLocation mapModel, ResourceLocation dyedBlockModel, ResourceLocation dyedMapModel, BlockModelGenerators blockModelGenerators) {
         ResourceLocation invisibleModel = ModelTemplates.PARTICLE_ONLY.create(ModelLocationHelper.getBlockModel(block,
                 "_invisible"), TextureMapping.particle(Blocks.BIRCH_PLANKS), blockModelGenerators.modelOutput);
-        blockModelGenerators.blockStateOutput.accept(MultiVariantGenerator.multiVariant(block)
-                .with(PropertyDispatch.properties(ItemFrameBlock.HAS_MAP, ItemFrameBlock.DYED)
-                        .select(Boolean.FALSE,
-                                Boolean.FALSE,
-                                Variant.variant().with(VariantProperties.MODEL, blockModel))
-                        .select(Boolean.TRUE, Boolean.FALSE, Variant.variant().with(VariantProperties.MODEL, mapModel))
-                        .select(Boolean.FALSE,
-                                Boolean.TRUE,
-                                Variant.variant().with(VariantProperties.MODEL, dyedBlockModel))
-                        .select(Boolean.TRUE,
-                                Boolean.TRUE,
-                                Variant.variant().with(VariantProperties.MODEL, dyedMapModel)))
-                .with(createFacingDispatch())
-                .with(PropertyDispatch.property(ItemFrameBlock.INVISIBLE)
-                        .select(Boolean.TRUE, Variant.variant().with(VariantProperties.MODEL, invisibleModel))
-                        .select(Boolean.FALSE, Variant.variant())));
-    }
-
-    public static PropertyDispatch createFacingDispatch() {
-        return PropertyDispatch.property(BlockStateProperties.FACING)
-                .select(Direction.DOWN,
-                        Variant.variant()
-                                .with(VariantProperties.X_ROT, VariantProperties.Rotation.R90)
-                                .with(VariantProperties.Y_ROT, VariantProperties.Rotation.R180))
-                .select(Direction.UP,
-                        Variant.variant()
-                                .with(VariantProperties.X_ROT, VariantProperties.Rotation.R270)
-                                .with(VariantProperties.Y_ROT, VariantProperties.Rotation.R180))
-                .select(Direction.NORTH, Variant.variant())
-                .select(Direction.SOUTH,
-                        Variant.variant().with(VariantProperties.Y_ROT, VariantProperties.Rotation.R180))
-                .select(Direction.WEST,
-                        Variant.variant().with(VariantProperties.Y_ROT, VariantProperties.Rotation.R270))
-                .select(Direction.EAST,
-                        Variant.variant().with(VariantProperties.Y_ROT, VariantProperties.Rotation.R90));
+        blockModelGenerators.blockStateOutput.accept(MultiVariantGenerator.dispatch(block)
+                .with(PropertyDispatch.initial(ItemFrameBlock.MAP, ItemFrameBlock.DYED)
+                        .select(Boolean.FALSE, Boolean.FALSE, BlockModelGenerators.plainVariant(blockModel))
+                        .select(Boolean.TRUE, Boolean.FALSE, BlockModelGenerators.plainVariant(mapModel))
+                        .select(Boolean.FALSE, Boolean.TRUE, BlockModelGenerators.plainVariant(dyedBlockModel))
+                        .select(Boolean.TRUE, Boolean.TRUE, BlockModelGenerators.plainVariant(dyedMapModel)))
+                .with(PropertyDispatch.modify(ItemFrameBlock.INVISIBLE)
+                        .select(Boolean.TRUE, VariantMutator.MODEL.withValue(invisibleModel))
+                        .select(Boolean.FALSE, BlockModelGenerators.NOP))
+                .with(ROTATIONS_ITEM_FRAME_FACING));
     }
 
     @Override

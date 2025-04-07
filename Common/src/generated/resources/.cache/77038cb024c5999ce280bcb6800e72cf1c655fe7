@@ -1,6 +1,6 @@
-// 1.21.4	2025-03-09T14:17:42.201395	Model Definitions
-4795d90df97fed28c924544a3b176946dcf680ee assets/fastitemframes/blockstates/glow_item_frame.json
-23feb670af91d760c5f02c01c5c07c3e179c7c5e assets/fastitemframes/blockstates/item_frame.json
+// 1.21.5	2025-04-07T10:25:15.872192	Model Definitions
+afbc360aaac224fec973d596476d8cfe4ba8a88d assets/fastitemframes/blockstates/glow_item_frame.json
+932db53b67f51c70ec02b3d8f2c08889653834b4 assets/fastitemframes/blockstates/item_frame.json
 d11aa537c0b8a072926f64e6391020a0b8a4be7e assets/fastitemframes/models/block/glow_item_frame.json
 401c651311876bfa9908b93895db4e2c6fae05ff assets/fastitemframes/models/block/glow_item_frame_dyed.json
 ab5f6f464aa499208c8dd7f7b6306a9f2b0fb731 assets/fastitemframes/models/block/glow_item_frame_invisible.json

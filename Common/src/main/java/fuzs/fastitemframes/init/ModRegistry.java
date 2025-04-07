@@ -9,7 +9,7 @@ import fuzs.puzzleslib.api.attachment.v4.DataAttachmentType;
 import fuzs.puzzleslib.api.block.v1.MutableSoundType;
 import fuzs.puzzleslib.api.init.v3.registry.RegistryManager;
 import fuzs.puzzleslib.api.init.v3.tags.TagFactory;
-import fuzs.puzzleslib.api.network.v3.PlayerSet;
+import fuzs.puzzleslib.api.network.v4.PlayerSet;
 import net.minecraft.core.Holder;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.sounds.SoundEvents;
@@ -25,6 +25,8 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
+
+import java.util.Set;
 
 public class ModRegistry {
     public static final SoundType ITEM_FRAME_SOUND_TYPE = MutableSoundType.copyOf(SoundType.WOOD)
@@ -44,8 +46,7 @@ public class ModRegistry {
     public static final Holder.Reference<BlockEntityType<ItemFrameBlockEntity>> ITEM_FRAME_BLOCK_ENTITY = REGISTRIES.registerBlockEntityType(
             "item_frame",
             ItemFrameBlockEntity::new,
-            ITEM_FRAME_BLOCK,
-            GLOW_ITEM_FRAME_BLOCK);
+            () -> Set.of(ITEM_FRAME_BLOCK.value(), GLOW_ITEM_FRAME_BLOCK.value()));
 
     static final TagFactory TAGS = TagFactory.make(FastItemFrames.MOD_ID);
     public static final TagKey<Block> ITEM_FRAMES_BLOCK_TAG = TAGS.registerBlockTag("item_frames");

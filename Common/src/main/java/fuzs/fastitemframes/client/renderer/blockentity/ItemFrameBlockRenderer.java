@@ -1,8 +1,8 @@
 package fuzs.fastitemframes.client.renderer.blockentity;
 
-import com.google.common.collect.ImmutableMap;
 import com.mojang.blaze3d.vertex.PoseStack;
-import fuzs.fastitemframes.FastItemFrames;
+import fuzs.fastitemframes.init.ModRegistry;
+import fuzs.fastitemframes.world.level.block.ItemFrameBlock;
 import fuzs.fastitemframes.world.level.block.entity.ItemFrameBlockEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -11,38 +11,38 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.ItemFrameRenderState;
-import net.minecraft.client.resources.model.BlockStateModelLoader;
-import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.Map;
-
 public class ItemFrameBlockRenderer implements BlockEntityRenderer<ItemFrameBlockEntity> {
-    /**
-     * Glow item frame entities should really use a separate block model, as the model used for the blocks has a set
-     * light emission, which the entity already applies separately though.
-     */
-    public static final Map<ModelResourceLocation, ResourceLocation> ITEM_FRAME_BLOCK_MODELS = ImmutableMap.<ModelResourceLocation, ResourceLocation>builder()
-            .put(BlockStateModelLoader.FRAME_LOCATION, FastItemFrames.id("block/item_frame_dyed"))
-            .put(BlockStateModelLoader.GLOW_FRAME_LOCATION, FastItemFrames.id("block/glow_item_frame_dyed"))
-            .put(BlockStateModelLoader.MAP_FRAME_LOCATION, FastItemFrames.id("block/item_frame_map_dyed"))
-            .put(BlockStateModelLoader.GLOW_MAP_FRAME_LOCATION, FastItemFrames.id("block/glow_item_frame_map_dyed"))
-            .build();
-
     private final EntityRenderDispatcher entityRenderDispatcher;
 
     public ItemFrameBlockRenderer(BlockEntityRendererProvider.Context context) {
         this.entityRenderDispatcher = context.getEntityRenderer();
     }
 
+    /**
+     * Glow item frame entities should really use a separate block model, as the model used for the blocks has a set
+     * light emission, which the entity already applies separately though.
+     */
+    public static BlockState getItemFrameBlockState(boolean isGlowFrame, boolean isMapFrame, boolean isDyed) {
+        Block block;
+        if (isGlowFrame) {
+            block = ModRegistry.GLOW_ITEM_FRAME_BLOCK.value();
+        } else {
+            block = ModRegistry.ITEM_FRAME_BLOCK.value();
+        }
+        return block.defaultBlockState().setValue(ItemFrameBlock.MAP, isMapFrame).setValue(ItemFrameBlock.DYED, isDyed);
+    }
+
     @Override
-    public void render(ItemFrameBlockEntity blockEntity, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
+    public void render(ItemFrameBlockEntity blockEntity, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, int packedOverlay, Vec3 cameraPosition) {
         if (!blockEntity.getItem().isEmpty()) {
             ItemFrame itemFrame = blockEntity.getEntityRepresentation();
             if (itemFrame != null) {

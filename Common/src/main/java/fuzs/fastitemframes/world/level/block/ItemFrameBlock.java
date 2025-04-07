@@ -4,15 +4,16 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import fuzs.fastitemframes.world.level.block.entity.ItemFrameBlockEntity;
 import fuzs.puzzleslib.api.core.v1.ModLoaderEnvironment;
-import fuzs.puzzleslib.api.core.v1.Proxy;
 import fuzs.puzzleslib.api.util.v1.InteractionResultHelper;
 import fuzs.puzzleslib.api.util.v1.ShapesHelper;
+import fuzs.puzzleslib.impl.core.proxy.ProxyImpl;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.decoration.ItemFrame;
@@ -53,8 +54,8 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
             propertiesCodec()).apply(instance, ItemFrameBlock::new));
     public static final EnumProperty<Direction> FACING = BlockStateProperties.FACING;
     public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
+    public static final BooleanProperty MAP = BlockStateProperties.MAP;
     public static final BooleanProperty INVISIBLE = BooleanProperty.create("invisible");
-    public static final BooleanProperty HAS_MAP = BooleanProperty.create("has_map");
     public static final BooleanProperty DYED = BooleanProperty.create("dyed");
     static final VoxelShape SHAPE = box(2.0, 0.0, 2.0, 14.0, 1.0, 14.0);
     static final VoxelShape MAP_SHAPE = box(0.0, 0.0, 0.0, 16.0, 1.0, 16.0);
@@ -68,10 +69,10 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
         super(properties);
         this.item = item;
         this.registerDefaultState(this.stateDefinition.any()
-                .setValue(FACING, Direction.UP)
+                .setValue(FACING, Direction.NORTH)
                 .setValue(WATERLOGGED, Boolean.FALSE)
+                .setValue(MAP, Boolean.FALSE)
                 .setValue(INVISIBLE, Boolean.FALSE)
-                .setValue(HAS_MAP, Boolean.FALSE)
                 .setValue(DYED, Boolean.FALSE));
         Item.BY_BLOCK.put(this, item);
         BY_ITEM.put(item, this);
@@ -121,7 +122,7 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return state.getValue(HAS_MAP) ? MAP_SHAPES.get(state.getValue(FACING)) : SHAPES.get(state.getValue(FACING));
+        return state.getValue(MAP) ? MAP_SHAPES.get(state.getValue(FACING)) : SHAPES.get(state.getValue(FACING));
     }
 
     @Override
@@ -193,7 +194,7 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(FACING, INVISIBLE, HAS_MAP, WATERLOGGED, DYED);
+        builder.add(FACING, INVISIBLE, MAP, WATERLOGGED, DYED);
     }
 
     public boolean isFixed(LevelReader level, BlockPos blockPos) {
@@ -218,17 +219,8 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     }
 
     @Override
-    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
-        if (!state.is(newState.getBlock())) {
-            if (level instanceof ServerLevel serverLevel &&
-                    level.getBlockEntity(pos) instanceof ItemFrameBlockEntity blockEntity) {
-                blockEntity.getEntityRepresentation().dropItem(serverLevel, null, false);
-                // not sure if this is necessary since the block entity is about to be deleted as well
-                blockEntity.setChanged();
-            }
-
-            super.onRemove(state, level, pos, newState, movedByPiston);
-        }
+    protected void affectNeighborsAfterRemoval(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, boolean movedByPiston) {
+        Containers.updateNeighboursAfterDestroy(blockState, serverLevel, blockPos);
     }
 
     @Override
@@ -255,8 +247,8 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
 
             ItemStack itemStack = null;
             // it's fine to use proxy value as this is only called client-side
-            if (!Proxy.INSTANCE.hasControlDown() ||
-                    ModLoaderEnvironment.INSTANCE.isClient() && !Proxy.INSTANCE.getClientPlayer().isCreative()) {
+            if (!ProxyImpl.get().hasControlDown() ||
+                    ModLoaderEnvironment.INSTANCE.isClient() && !ProxyImpl.get().getClientPlayer().isCreative()) {
 
                 ItemFrame itemFrame = blockEntity.getEntityRepresentation();
                 if (itemFrame != null) {
@@ -286,7 +278,7 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     }
 
     public static ItemStack setItemFrameColor(ItemStack itemStack, int color) {
-        itemStack.set(DataComponents.DYED_COLOR, new DyedItemColor(color, true));
+        itemStack.set(DataComponents.DYED_COLOR, new DyedItemColor(color));
         return itemStack;
     }
 }
