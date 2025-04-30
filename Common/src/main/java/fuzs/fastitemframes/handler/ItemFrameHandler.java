@@ -47,7 +47,7 @@ public class ItemFrameHandler {
                 Block block = ItemFrameBlock.BY_ITEM.get(itemFrame.getFrameItemStack().getItem());
                 BlockPos blockPos = entity.blockPosition();
                 // require air, another item frame block might already be placed in this location, or a decorative item such as coral fans
-                if (block != null && serverLevel.isEmptyBlock(blockPos)) {
+                if (block != null && serverLevel.hasChunkAt(blockPos) && serverLevel.isEmptyBlock(blockPos)) {
 
                     serverLevel.setBlock(blockPos,
                             block.defaultBlockState().setValue(ItemFrameBlock.FACING, itemFrame.getDirection()),
