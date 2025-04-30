@@ -52,7 +52,7 @@ public class ItemFrameHandler {
                 BlockPos blockPos = entity.blockPosition();
                 // require air, another item frame block might already be placed in this location, or a decorative block
                 // do not check for replaceable blocks, will break parity with vanilla otherwise
-                if (block != null &&
+                if (block != null && serverLevel.hasChunkAt(blockPos) &&
                         (serverLevel.isEmptyBlock(blockPos) || serverLevel.getBlockState(blockPos).is(Blocks.WATER))) {
 
                     BlockHitResult blockHitResult = new BlockHitResult(new Vec3(0.5, 0.5, 0.5),
