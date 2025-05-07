@@ -9,15 +9,23 @@ import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.decoration.HangingEntity;
 import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.HangingEntityItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.MapItem;
 import net.minecraft.world.item.component.DyedItemColor;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.saveddata.maps.MapId;
+import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.OptionalInt;
@@ -32,6 +40,8 @@ public class ItemFrameBlockEntity extends BlockEntity {
     private CompoundTag storedTag;
     @Nullable
     private Integer color;
+
+    private int tickCount = 0;
 
     public ItemFrameBlockEntity(BlockPos pos, BlockState blockState) {
         super(ModRegistry.ITEM_FRAME_BLOCK_ENTITY.value(), pos, blockState);
@@ -181,6 +191,29 @@ public class ItemFrameBlockEntity extends BlockEntity {
         }
     }
 
+    public static void serverTick(Level level, BlockPos blockPos, BlockState blockState, ItemFrameBlockEntity blockEntity) {
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return;
+        }
+        if (blockEntity.tickCount % 10 == 0) {
+            ItemStack itemStack = blockEntity.getItem();
+            if (itemStack.getItem() instanceof MapItem) {
+                MapId mapId = itemStack.get(DataComponents.MAP_ID);
+                MapItemSavedData mapItemSavedData = MapItem.getSavedData(mapId, level);
+                if (mapItemSavedData != null) {
+                    for (ServerPlayer serverPlayer : serverLevel.players()) {
+                        mapItemSavedData.tickCarriedBy(serverPlayer, itemStack);
+                        Packet<?> packet = mapItemSavedData.getUpdatePacket(mapId, serverPlayer);
+                        if (packet != null) {
+                            serverPlayer.connection.send(packet);
+                        }
+                    }
+                }
+            }
+        }
+        blockEntity.tickCount++;
+    }
+
     private void loadItemFrame(CompoundTag compoundTag) {
         ItemFrame itemFrame = this.getEntityRepresentation(true);
         if (itemFrame != null) {
@@ -202,5 +235,8 @@ public class ItemFrameBlockEntity extends BlockEntity {
         itemFrame.setDirection(this.getBlockState().getValue(ItemFrameBlock.FACING));
         // just make those always invisible for client rendering, the actual block invisibility status is tracked via a block state
         itemFrame.setInvisible(true);
+    }
+
+    public static void clientTick(Level level, BlockPos blockPos, BlockState blockState, ItemFrameBlockEntity itemFrameBlockEntity) {
     }
 }
