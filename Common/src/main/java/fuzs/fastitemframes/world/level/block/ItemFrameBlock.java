@@ -1,6 +1,8 @@
 package fuzs.fastitemframes.world.level.block;
 
+import fuzs.fastitemframes.init.ModRegistry;
 import fuzs.fastitemframes.world.level.block.entity.ItemFrameBlockEntity;
+import fuzs.puzzleslib.api.block.v1.TickingEntityBlock;
 import fuzs.puzzleslib.api.core.v1.ModLoaderEnvironment;
 import fuzs.puzzleslib.api.core.v1.Proxy;
 import fuzs.puzzleslib.api.shapes.v1.ShapesHelper;
@@ -23,6 +25,7 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -41,7 +44,7 @@ import java.util.Map;
 import java.util.OptionalInt;
 
 @SuppressWarnings("deprecation")
-public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterloggedBlock {
+public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterloggedBlock, TickingEntityBlock {
     //    public static final MapCodec<ItemFrameBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
 //            BuiltInRegistries.ITEM.byNameCodec().fieldOf("item").forGetter(itemFrame -> itemFrame.item),
 //            propertiesCodec()
@@ -167,6 +170,11 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     @Override
     public FluidState getFluidState(BlockState state) {
         return state.getValue(WATERLOGGED) ? Fluids.WATER.getSource(false) : super.getFluidState(state);
+    }
+
+    @Override
+    public BlockEntityType<? extends ItemFrameBlockEntity> getBlockEntityType() {
+        return ModRegistry.ITEM_FRAME_BLOCK_ENTITY.value();
     }
 
     @Nullable
