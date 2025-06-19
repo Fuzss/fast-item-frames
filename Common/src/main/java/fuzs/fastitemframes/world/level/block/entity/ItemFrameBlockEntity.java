@@ -3,27 +3,34 @@ package fuzs.fastitemframes.world.level.block.entity;
 import fuzs.fastitemframes.FastItemFrames;
 import fuzs.fastitemframes.init.ModRegistry;
 import fuzs.fastitemframes.world.level.block.ItemFrameBlock;
+import fuzs.puzzleslib.api.block.v1.entity.TickingBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.decoration.HangingEntity;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.item.HangingEntityItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.MapItem;
 import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.saveddata.maps.MapId;
+import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.OptionalInt;
 
-public class ItemFrameBlockEntity extends BlockEntity {
+public class ItemFrameBlockEntity extends BlockEntity implements TickingBlockEntity {
     static final String TAG_COLOR = FastItemFrames.id("color").toString();
     static final String TAG_ITEM_FRAME = FastItemFrames.id("item_frame").toString();
 
@@ -36,6 +43,29 @@ public class ItemFrameBlockEntity extends BlockEntity {
 
     public ItemFrameBlockEntity(BlockPos pos, BlockState blockState) {
         super(ModRegistry.ITEM_FRAME_BLOCK_ENTITY.value(), pos, blockState);
+    }
+
+    /**
+     * @see net.minecraft.server.level.ServerEntity#sendChanges()
+     */
+    @Override
+    public void serverTick() {
+        if (this.hasLevel() && ((ServerLevel) this.getLevel()).getServer().getTickCount() % 10 == 0) {
+            ItemStack itemStack = this.getItem();
+            if (itemStack.getItem() instanceof MapItem) {
+                MapId mapId = itemStack.get(DataComponents.MAP_ID);
+                MapItemSavedData mapItemSavedData = MapItem.getSavedData(mapId, this.getLevel());
+                if (mapItemSavedData != null) {
+                    for (ServerPlayer serverPlayer : ((ServerLevel) this.getLevel()).players()) {
+                        mapItemSavedData.tickCarriedBy(serverPlayer, itemStack);
+                        Packet<?> packet = mapItemSavedData.getUpdatePacket(mapId, serverPlayer);
+                        if (packet != null) {
+                            serverPlayer.connection.send(packet);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public void load(ItemFrame itemFrame) {
