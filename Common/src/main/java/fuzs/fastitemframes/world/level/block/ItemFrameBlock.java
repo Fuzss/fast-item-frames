@@ -4,6 +4,7 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import fuzs.fastitemframes.init.ModRegistry;
 import fuzs.fastitemframes.world.level.block.entity.ItemFrameBlockEntity;
+import fuzs.puzzleslib.api.block.v1.entity.TickingEntityBlock;
 import fuzs.puzzleslib.api.core.v1.ModLoaderEnvironment;
 import fuzs.puzzleslib.api.core.v1.Proxy;
 import fuzs.puzzleslib.api.shape.v1.ShapesHelper;
@@ -27,8 +28,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.*;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -41,18 +40,16 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.EntityCollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.OptionalInt;
 
 @SuppressWarnings("deprecation")
-public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterloggedBlock {
+public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterloggedBlock, TickingEntityBlock<ItemFrameBlockEntity> {
     public static final MapCodec<ItemFrameBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
             BuiltInRegistries.ITEM.byNameCodec().fieldOf("item").forGetter(itemFrame -> itemFrame.item),
-            propertiesCodec()
-    ).apply(instance, ItemFrameBlock::new));
+            propertiesCodec()).apply(instance, ItemFrameBlock::new));
     public static final DirectionProperty FACING = BlockStateProperties.FACING;
     public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
     public static final BooleanProperty INVISIBLE = BooleanProperty.create("invisible");
@@ -135,10 +132,10 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     @Override
     public VoxelShape getCollisionShape(BlockState state, BlockGetter blockGetter, BlockPos pos, CollisionContext context) {
         // to be able to implement BlockBehavior::onProjectileHit a projectile must be able to collide with this block
-        if (context instanceof EntityCollisionContext entityCollisionContext &&
-                entityCollisionContext.getEntity() instanceof Projectile projectile) {
-            if (blockGetter instanceof Level level && projectile.mayInteract(level, pos) &&
-                    projectile.mayBreak(level)) {
+        if (context instanceof EntityCollisionContext entityCollisionContext
+                && entityCollisionContext.getEntity() instanceof Projectile projectile) {
+            if (blockGetter instanceof Level level && projectile.mayInteract(level, pos)
+                    && projectile.mayBreak(level)) {
                 return this.getShape(state, blockGetter, pos, context);
             }
         }
@@ -182,10 +179,9 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
         return state.getValue(WATERLOGGED) ? Fluids.WATER.getSource(false) : super.getFluidState(state);
     }
 
-    @Nullable
     @Override
-    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return new ItemFrameBlockEntity(pos, state);
+    public BlockEntityType<? extends ItemFrameBlockEntity> getBlockEntityType() {
+        return ModRegistry.ITEM_FRAME_BLOCK_ENTITY.value();
     }
 
     @Override
@@ -215,8 +211,8 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     @Override
     public void onProjectileHit(Level level, BlockState state, BlockHitResult hit, Projectile projectile) {
         BlockPos blockPos = hit.getBlockPos();
-        if (!level.isClientSide && !this.isFixed(level, blockPos) && projectile.mayInteract(level, blockPos) &&
-                projectile.mayBreak(level)) {
+        if (!level.isClientSide && !this.isFixed(level, blockPos) && projectile.mayInteract(level, blockPos)
+                && projectile.mayBreak(level)) {
             level.destroyBlock(blockPos, true, projectile);
             // update potentially attached comparators
             level.updateNeighborsAt(blockPos, this);
@@ -261,7 +257,8 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
 
             ItemStack itemStack = null;
             // it's fine to use proxy value as this is only called client-side
-            if (!Proxy.INSTANCE.hasControlDown() || ModLoaderEnvironment.INSTANCE.isClient() && !Proxy.INSTANCE.getClientPlayer().isCreative()) {
+            if (!Proxy.INSTANCE.hasControlDown()
+                    || ModLoaderEnvironment.INSTANCE.isClient() && !Proxy.INSTANCE.getClientPlayer().isCreative()) {
 
                 ItemFrame itemFrame = blockEntity.getEntityRepresentation();
                 if (itemFrame != null) {
@@ -293,11 +290,6 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     @Override
     public String getDescriptionId() {
         return this.asItem().getDescriptionId();
-    }
-
-    @Override
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> blockEntityType) {
-        return createTickerHelper(blockEntityType, ModRegistry.ITEM_FRAME_BLOCK_ENTITY.value(), level.isClientSide ? ItemFrameBlockEntity::clientTick : ItemFrameBlockEntity::serverTick);
     }
 
     public static ItemStack setItemFrameColor(ItemStack itemStack, int color) {
