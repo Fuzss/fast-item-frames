@@ -24,8 +24,8 @@ abstract class ItemFrameMixin extends HangingEntity {
         if (survives) {
             // prevent placing item frame entities inside item frame blocks with the same direction
             BlockState blockState = this.level().getBlockState(this.pos);
-            return !(blockState.getBlock() instanceof ItemFrameBlock) ||
-                    blockState.getValue(ItemFrameBlock.FACING) != this.direction;
+            return !(blockState.getBlock() instanceof ItemFrameBlock)
+                    || blockState.getValue(ItemFrameBlock.FACING) != this.getDirection();
         } else {
             return false;
         }
@@ -33,10 +33,6 @@ abstract class ItemFrameMixin extends HangingEntity {
 
     @ModifyReturnValue(method = "getFrameItemStack", at = @At("TAIL"))
     public ItemStack getFrameItemStack(ItemStack itemStack) {
-        if (ModRegistry.ITEM_FRAME_COLOR_ATTACHMENT_TYPE.has(this)) {
-            return ItemFrameBlock.setItemFrameColor(itemStack, ModRegistry.ITEM_FRAME_COLOR_ATTACHMENT_TYPE.get(this));
-        } else {
-            return itemStack;
-        }
+        return ItemFrameBlock.setItemFrameColor(itemStack, ModRegistry.ITEM_FRAME_COLOR_ATTACHMENT_TYPE.get(this));
     }
 }

@@ -1,6 +1,5 @@
 package fuzs.fastitemframes.init;
 
-import com.mojang.serialization.Codec;
 import fuzs.fastitemframes.FastItemFrames;
 import fuzs.fastitemframes.world.level.block.ItemFrameBlock;
 import fuzs.fastitemframes.world.level.block.entity.ItemFrameBlockEntity;
@@ -11,13 +10,13 @@ import fuzs.puzzleslib.api.init.v3.registry.RegistryManager;
 import fuzs.puzzleslib.api.init.v3.tags.TagFactory;
 import fuzs.puzzleslib.api.network.v4.PlayerSet;
 import net.minecraft.core.Holder;
-import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -52,9 +51,9 @@ public class ModRegistry {
     public static final TagKey<Block> ITEM_FRAMES_BLOCK_TAG = TAGS.registerBlockTag("item_frames");
     public static final TagKey<EntityType<?>> ITEM_FRAMES_ENTITY_TYPE_TAG = TAGS.registerEntityTypeTag("item_frames");
 
-    public static final DataAttachmentType<Entity, Integer> ITEM_FRAME_COLOR_ATTACHMENT_TYPE = DataAttachmentRegistry.<Integer>entityBuilder()
-            .persistent(Codec.INT)
-            .networkSynchronized(ByteBufCodecs.INT, PlayerSet::nearEntity)
+    public static final DataAttachmentType<Entity, DyedItemColor> ITEM_FRAME_COLOR_ATTACHMENT_TYPE = DataAttachmentRegistry.<DyedItemColor>entityBuilder()
+            .persistent(DyedItemColor.CODEC)
+            .networkSynchronized(DyedItemColor.STREAM_CODEC, PlayerSet::nearEntity)
             .build(FastItemFrames.id("item_frame_color"));
 
     public static void bootstrap() {

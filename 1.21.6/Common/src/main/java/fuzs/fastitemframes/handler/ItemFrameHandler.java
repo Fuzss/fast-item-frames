@@ -42,7 +42,7 @@ public class ItemFrameHandler {
         return EventResult.PASS;
     }
 
-    public static EventResult onEntityLoad(Entity entity, ServerLevel serverLevel) {
+    public static EventResult onEntityLoad(Entity entity, ServerLevel serverLevel, boolean isFreshEntity) {
 
         if (entity.getType().is(ModRegistry.ITEM_FRAMES_ENTITY_TYPE_TAG) && entity instanceof ItemFrame itemFrame) {
 

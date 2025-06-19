@@ -10,6 +10,7 @@ import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.item.HangingEntityItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.item.context.UseOnContext;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -33,12 +34,12 @@ abstract class HangingEntityItemMixin extends Item {
     public void useOn(UseOnContext context, CallbackInfoReturnable<InteractionResult> callback, @Local HangingEntity hangingEntity) {
         // we need to set the color before adding the entity to the level,
         // so that our event can copy the color to the block entity if applicable
-        if (hangingEntity.getType().is(ModRegistry.ITEM_FRAMES_ENTITY_TYPE_TAG) &&
-                hangingEntity instanceof ItemFrame itemFrame) {
+        if (hangingEntity.getType().is(ModRegistry.ITEM_FRAMES_ENTITY_TYPE_TAG)
+                && hangingEntity instanceof ItemFrame itemFrame) {
             ItemStack itemInHand = context.getItemInHand();
             if (itemInHand.is(ItemTags.DYEABLE) && itemInHand.has(DataComponents.DYED_COLOR)) {
-                int rgb = itemInHand.get(DataComponents.DYED_COLOR).rgb();
-                ModRegistry.ITEM_FRAME_COLOR_ATTACHMENT_TYPE.set(itemFrame, rgb);
+                DyedItemColor color = itemInHand.get(DataComponents.DYED_COLOR);
+                ModRegistry.ITEM_FRAME_COLOR_ATTACHMENT_TYPE.set(itemFrame, color);
             }
         }
     }

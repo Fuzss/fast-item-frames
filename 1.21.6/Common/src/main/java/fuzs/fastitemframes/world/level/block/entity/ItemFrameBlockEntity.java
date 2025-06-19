@@ -3,28 +3,36 @@ package fuzs.fastitemframes.world.level.block.entity;
 import fuzs.fastitemframes.FastItemFrames;
 import fuzs.fastitemframes.init.ModRegistry;
 import fuzs.fastitemframes.world.level.block.ItemFrameBlock;
+import fuzs.puzzleslib.api.block.v1.entity.TickingBlockEntity;
+import fuzs.puzzleslib.api.util.v1.ValueSerializationHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentGetter;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.server.level.ServerEntity;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.decoration.HangingEntity;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.item.HangingEntityItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.MapItem;
 import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.saveddata.maps.MapId;
+import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.OptionalInt;
-
-public class ItemFrameBlockEntity extends BlockEntity {
+public class ItemFrameBlockEntity extends BlockEntity implements TickingBlockEntity {
     static final String TAG_COLOR = FastItemFrames.id("color").toString();
     static final String TAG_ITEM_FRAME = FastItemFrames.id("item_frame").toString();
 
@@ -33,49 +41,60 @@ public class ItemFrameBlockEntity extends BlockEntity {
     @Nullable
     private CompoundTag storedTag;
     @Nullable
-    private Integer color;
+    private DyedItemColor color;
 
     public ItemFrameBlockEntity(BlockPos pos, BlockState blockState) {
         super(ModRegistry.ITEM_FRAME_BLOCK_ENTITY.value(), pos, blockState);
     }
 
+    /**
+     * @see ServerEntity#sendChanges()
+     */
+    @Override
+    public void serverTick() {
+        if (this.hasLevel() && ((ServerLevel) this.getLevel()).getServer().getTickCount() % 10 == 0) {
+            ItemStack itemStack = this.getItem();
+            if (itemStack.getItem() instanceof MapItem) {
+                MapId mapId = itemStack.get(DataComponents.MAP_ID);
+                MapItemSavedData mapItemSavedData = MapItem.getSavedData(mapId, this.getLevel());
+                if (mapItemSavedData != null) {
+                    for (ServerPlayer serverPlayer : ((ServerLevel) this.getLevel()).players()) {
+                        mapItemSavedData.tickCarriedBy(serverPlayer, itemStack);
+                        Packet<?> packet = mapItemSavedData.getUpdatePacket(mapId, serverPlayer);
+                        if (packet != null) {
+                            serverPlayer.connection.send(packet);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public void load(ItemFrame itemFrame) {
-        CompoundTag compoundTag = new CompoundTag();
-        itemFrame.addAdditionalSaveData(compoundTag);
+        CompoundTag compoundTag = ValueSerializationHelper.save(this.problemPath(), itemFrame::saveWithoutId);
         this.loadItemFrame(compoundTag);
-        if (ModRegistry.ITEM_FRAME_COLOR_ATTACHMENT_TYPE.has(itemFrame)) {
-            this.setColor(ModRegistry.ITEM_FRAME_COLOR_ATTACHMENT_TYPE.get(itemFrame));
-        }
+        this.color = ModRegistry.ITEM_FRAME_COLOR_ATTACHMENT_TYPE.get(itemFrame);
     }
 
     @Override
-    public void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        if (tag.contains(TAG_ITEM_FRAME)) {
-            this.loadItemFrame(tag.getCompoundOrEmpty(TAG_ITEM_FRAME));
-        }
-        this.color = tag.contains(TAG_COLOR) ? tag.getIntOr(TAG_COLOR, 0) : null;
+    public void loadAdditional(ValueInput valueInput) {
+        super.loadAdditional(valueInput);
+        valueInput.read(TAG_ITEM_FRAME, CompoundTag.CODEC).ifPresent(this::loadItemFrame);
+        this.color = valueInput.read(TAG_COLOR, DyedItemColor.CODEC).orElse(null);
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
-        CompoundTag itemFrameTag = this.getItemFrameTag();
-        if (itemFrameTag != null) {
-            tag.put(TAG_ITEM_FRAME, itemFrameTag);
-        }
-        if (this.color != null) {
-            tag.putInt(TAG_COLOR, this.color);
-        }
+    protected void saveAdditional(ValueOutput valueOutput) {
+        super.saveAdditional(valueOutput);
+        valueOutput.storeNullable(TAG_ITEM_FRAME, CompoundTag.CODEC, this.getItemFrameTag());
+        valueOutput.storeNullable(TAG_COLOR, DyedItemColor.CODEC, this.color);
     }
 
     @Nullable
     private CompoundTag getItemFrameTag() {
         ItemFrame itemFrame = this.getEntityRepresentation();
         if (itemFrame != null) {
-            CompoundTag compoundTag = new CompoundTag();
-            itemFrame.addAdditionalSaveData(compoundTag);
-            return compoundTag;
+            return ValueSerializationHelper.save(this.problemPath(), itemFrame::saveWithoutId);
         } else if (this.storedTag != null) {
             return this.storedTag;
         }
@@ -104,33 +123,25 @@ public class ItemFrameBlockEntity extends BlockEntity {
     @Override
     protected void applyImplicitComponents(DataComponentGetter dataComponentGetter) {
         super.applyImplicitComponents(dataComponentGetter);
-        DyedItemColor dyedItemColor = dataComponentGetter.get(DataComponents.DYED_COLOR);
-        if (dyedItemColor != null) {
-            this.color = dyedItemColor.rgb();
-        }
+        this.color = dataComponentGetter.get(DataComponents.DYED_COLOR);
     }
 
     @Override
     protected void collectImplicitComponents(DataComponentMap.Builder components) {
         super.collectImplicitComponents(components);
         if (this.color != null) {
-            components.set(DataComponents.DYED_COLOR, new DyedItemColor(this.color));
+            components.set(DataComponents.DYED_COLOR, this.color);
         }
     }
 
     @Override
-    public void removeComponentsFromTag(CompoundTag tag) {
-        tag.remove(TAG_COLOR);
+    public void removeComponentsFromTag(ValueOutput valueOutput) {
+        valueOutput.discard(TAG_COLOR);
     }
 
-    public void setColor(int color) {
-        if (this.color == null || this.color != color) {
-            this.color = color;
-        }
-    }
-
-    public OptionalInt getColor() {
-        return this.color != null ? OptionalInt.of(this.color) : OptionalInt.empty();
+    @Nullable
+    public DyedItemColor getColor() {
+        return this.color;
     }
 
     public ItemStack getItem() {
@@ -155,13 +166,14 @@ public class ItemFrameBlockEntity extends BlockEntity {
         BlockState blockState = this.getBlockState();
         ItemFrame itemFrame = this.getEntityRepresentation();
         if (itemFrame != null) {
+            blockState = blockState.setValue(ItemFrameBlock.MAP, itemFrame.hasFramedMap())
+                    .setValue(ItemFrameBlock.DYED, this.color != null);
 
             if (itemFrame.getItem().isEmpty() && blockState.getValue(ItemFrameBlock.INVISIBLE)) {
-                blockState = blockState.setValue(ItemFrameBlock.INVISIBLE, Boolean.FALSE);
+                return blockState.setValue(ItemFrameBlock.INVISIBLE, Boolean.FALSE);
+            } else {
+                return blockState;
             }
-
-            return blockState.setValue(ItemFrameBlock.MAP, itemFrame.hasFramedMap())
-                    .setValue(ItemFrameBlock.DYED, this.getColor().isPresent());
         }
 
         return blockState;
@@ -192,7 +204,7 @@ public class ItemFrameBlockEntity extends BlockEntity {
         if (itemFrame != null) {
             this.initItemFrame(itemFrame, compoundTag);
         } else {
-            this.storedTag = compoundTag.copy();
+            this.storedTag = compoundTag;
         }
     }
 
@@ -201,7 +213,9 @@ public class ItemFrameBlockEntity extends BlockEntity {
         BlockPos pos = this.getBlockPos();
         // set this first to prevent a warning when reading the wrong position from nbt
         itemFrame.setPos(pos.getX(), pos.getY(), pos.getZ());
-        if (compoundTag != null) itemFrame.readAdditionalSaveData(compoundTag);
+        if (compoundTag != null) {
+            ValueSerializationHelper.load(this.problemPath(), itemFrame.registryAccess(), compoundTag, itemFrame::load);
+        }
         // set this again in case the nbt contained a wrong position
         itemFrame.setPos(pos.getX(), pos.getY(), pos.getZ());
         // force block facing e.g. when the item frame has been copied with nbt

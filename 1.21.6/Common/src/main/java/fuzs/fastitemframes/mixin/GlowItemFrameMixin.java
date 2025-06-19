@@ -20,10 +20,6 @@ abstract class GlowItemFrameMixin extends HangingEntity {
 
     @ModifyReturnValue(method = "getFrameItemStack", at = @At("TAIL"))
     public ItemStack getFrameItemStack(ItemStack itemStack) {
-        if (ModRegistry.ITEM_FRAME_COLOR_ATTACHMENT_TYPE.has(this)) {
-            return ItemFrameBlock.setItemFrameColor(itemStack, ModRegistry.ITEM_FRAME_COLOR_ATTACHMENT_TYPE.get(this));
-        } else {
-            return itemStack;
-        }
+        return ItemFrameBlock.setItemFrameColor(itemStack, ModRegistry.ITEM_FRAME_COLOR_ATTACHMENT_TYPE.get(this));
     }
 }
