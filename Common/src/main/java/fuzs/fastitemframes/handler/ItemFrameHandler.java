@@ -31,8 +31,12 @@ public class ItemFrameHandler {
             if (level.getBlockEntity(pos) instanceof ItemFrameBlockEntity blockEntity) {
                 ItemStack itemStack = blockEntity.getItem();
                 if (!itemStack.isEmpty()) {
-                    blockEntity.getEntityRepresentation()
-                            .hurtServer(level, level.damageSources().playerAttack(player), 1.0F);
+                    ItemFrame itemFrame = blockEntity.getEntityRepresentation();
+                    itemFrame.hurtServer(level, level.damageSources().playerAttack(player), 1.0F);
+                    if (itemFrame.getItem().isEmpty()) {
+                        itemFrame.setInvisible(false);
+                    }
+
                     blockEntity.markUpdated();
                     return EventResult.INTERRUPT;
                 }

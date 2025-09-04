@@ -21,6 +21,7 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 public class ItemFrameBlockRenderer implements BlockEntityRenderer<ItemFrameBlockEntity> {
+    private final Minecraft minecraft = Minecraft.getInstance();
     private final EntityRenderDispatcher entityRenderDispatcher;
 
     public ItemFrameBlockRenderer(BlockEntityRendererProvider.Context context) {
@@ -32,13 +33,12 @@ public class ItemFrameBlockRenderer implements BlockEntityRenderer<ItemFrameBloc
      * light emission, which the entity already applies separately though.
      */
     public static BlockState getItemFrameBlockState(boolean isGlowFrame, boolean isMapFrame, boolean isDyed) {
-        Block block;
-        if (isGlowFrame) {
-            block = ModRegistry.GLOW_ITEM_FRAME_BLOCK.value();
-        } else {
-            block = ModRegistry.ITEM_FRAME_BLOCK.value();
-        }
+        Block block = getItemFrameBlock(isGlowFrame);
         return block.defaultBlockState().setValue(ItemFrameBlock.MAP, isMapFrame).setValue(ItemFrameBlock.DYED, isDyed);
+    }
+
+    private static Block getItemFrameBlock(boolean isGlowFrame) {
+        return isGlowFrame ? ModRegistry.GLOW_ITEM_FRAME_BLOCK.value() : ModRegistry.ITEM_FRAME_BLOCK.value();
     }
 
     @Override
@@ -64,10 +64,15 @@ public class ItemFrameBlockRenderer implements BlockEntityRenderer<ItemFrameBloc
                 }
 
                 ItemFrameRenderState renderState = entityRenderer.createRenderState(itemFrame, partialTick);
+                renderState.isInvisible = true;
 
                 if (this.shouldShowName(blockEntity, itemFrame)) {
+                    renderState.nameTag = entityRenderer.getNameTag(itemFrame);
+                }
+
+                if (renderState.nameTag != null) {
                     entityRenderer.renderNameTag(renderState,
-                            itemFrame.getDisplayName(),
+                            renderState.nameTag,
                             poseStack,
                             bufferSource,
                             packedLight);
@@ -90,13 +95,12 @@ public class ItemFrameBlockRenderer implements BlockEntityRenderer<ItemFrameBloc
     }
 
     protected boolean shouldShowName(ItemFrameBlockEntity blockEntity, ItemFrame entity) {
-        if (Minecraft.renderNames() && !entity.getItem().isEmpty() &&
-                entity.getItem().has(DataComponents.CUSTOM_NAME)) {
-            Minecraft minecraft = Minecraft.getInstance();
-            HitResult hitResult = minecraft.hitResult;
-            if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK &&
-                    blockEntity.getBlockPos().equals((((BlockHitResult) hitResult).getBlockPos()))) {
-                double distanceToEntity = minecraft.gameRenderer.getMainCamera()
+        if (Minecraft.renderNames() && !entity.getItem().isEmpty() && entity.getItem()
+                .has(DataComponents.CUSTOM_NAME)) {
+            HitResult hitResult = this.minecraft.hitResult;
+            if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK && blockEntity.getBlockPos()
+                    .equals((((BlockHitResult) hitResult).getBlockPos()))) {
+                double distanceToEntity = this.minecraft.gameRenderer.getMainCamera()
                         .getPosition()
                         .distanceToSqr(entity.position());
                 double permittedDistance = entity.isDiscrete() ? 32.0 : 64.0;

@@ -71,7 +71,9 @@ public class ItemFrameBlockEntity extends BlockEntity implements TickingBlockEnt
     }
 
     public void load(ItemFrame itemFrame) {
-        CompoundTag compoundTag = ValueSerializationHelper.save(this.problemPath(), itemFrame::saveWithoutId);
+        CompoundTag compoundTag = ValueSerializationHelper.save(this.problemPath(),
+                itemFrame.registryAccess(),
+                itemFrame::saveWithoutId);
         this.loadItemFrame(compoundTag);
         this.color = ModRegistry.ITEM_FRAME_COLOR_ATTACHMENT_TYPE.get(itemFrame);
     }
@@ -94,7 +96,9 @@ public class ItemFrameBlockEntity extends BlockEntity implements TickingBlockEnt
     private CompoundTag getItemFrameTag() {
         ItemFrame itemFrame = this.getEntityRepresentation();
         if (itemFrame != null) {
-            return ValueSerializationHelper.save(this.problemPath(), itemFrame::saveWithoutId);
+            return ValueSerializationHelper.save(this.problemPath(),
+                    itemFrame.registryAccess(),
+                    itemFrame::saveWithoutId);
         } else if (this.storedTag != null) {
             return this.storedTag;
         }
@@ -115,9 +119,14 @@ public class ItemFrameBlockEntity extends BlockEntity implements TickingBlockEnt
     @Override
     public void preRemoveSideEffects(BlockPos blockPos, BlockState blockState) {
         super.preRemoveSideEffects(blockPos, blockState);
-        this.getEntityRepresentation().dropItem((ServerLevel) this.level, null, false);
-        // not sure if this is necessary since the block entity is about to be deleted as well
-        this.setChanged();
+        if (this.getLevel() instanceof ServerLevel serverLevel) {
+            ItemFrame itemFrame = this.getEntityRepresentation();
+            if (itemFrame != null) {
+                itemFrame.dropItem(serverLevel, null, false);
+                // not sure if this is necessary since the block entity is about to be deleted as well
+                this.setChanged();
+            }
+        }
     }
 
     @Override
@@ -162,21 +171,15 @@ public class ItemFrameBlockEntity extends BlockEntity implements TickingBlockEnt
     }
 
     private BlockState getUpdatedBlockState() {
-
         BlockState blockState = this.getBlockState();
         ItemFrame itemFrame = this.getEntityRepresentation();
         if (itemFrame != null) {
-            blockState = blockState.setValue(ItemFrameBlock.MAP, itemFrame.hasFramedMap())
-                    .setValue(ItemFrameBlock.DYED, this.color != null);
-
-            if (itemFrame.getItem().isEmpty() && blockState.getValue(ItemFrameBlock.INVISIBLE)) {
-                return blockState.setValue(ItemFrameBlock.INVISIBLE, Boolean.FALSE);
-            } else {
-                return blockState;
-            }
+            return blockState.setValue(ItemFrameBlock.MAP, itemFrame.hasFramedMap())
+                    .setValue(ItemFrameBlock.DYED, this.color != null)
+                    .setValue(ItemFrameBlock.INVISIBLE, itemFrame.isInvisible() && !itemFrame.getItem().isEmpty());
+        } else {
+            return blockState;
         }
-
-        return blockState;
     }
 
     @Nullable
@@ -220,7 +223,5 @@ public class ItemFrameBlockEntity extends BlockEntity implements TickingBlockEnt
         itemFrame.setPos(pos.getX(), pos.getY(), pos.getZ());
         // force block facing e.g. when the item frame has been copied with nbt
         itemFrame.setDirection(this.getBlockState().getValue(ItemFrameBlock.FACING));
-        // just make those always invisible for client rendering, the actual block invisibility status is tracked via a block state
-        itemFrame.setInvisible(true);
     }
 }

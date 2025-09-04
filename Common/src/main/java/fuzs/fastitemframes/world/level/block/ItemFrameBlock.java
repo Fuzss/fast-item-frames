@@ -6,9 +6,9 @@ import fuzs.fastitemframes.init.ModRegistry;
 import fuzs.fastitemframes.world.level.block.entity.ItemFrameBlockEntity;
 import fuzs.puzzleslib.api.block.v1.entity.TickingEntityBlock;
 import fuzs.puzzleslib.api.core.v1.ModLoaderEnvironment;
+import fuzs.puzzleslib.api.util.v1.CommonHelper;
 import fuzs.puzzleslib.api.util.v1.InteractionResultHelper;
 import fuzs.puzzleslib.api.util.v1.ShapesHelper;
-import fuzs.puzzleslib.impl.core.proxy.ProxyImpl;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
@@ -95,7 +95,7 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     }
 
     @Override
-    protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
+    protected InteractionResult useItemOn(ItemStack itemInHand, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
 
         if (level.getBlockEntity(pos) instanceof ItemFrameBlockEntity blockEntity) {
 
@@ -110,15 +110,21 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
                     return InteractionResultHelper.sidedSuccess(level.isClientSide);
                 } else {
 
-                    if (itemFrame.getItem().isEmpty()) itemFrame.setRotation(0);
+                    if (itemFrame.getItem().isEmpty()) {
+                        itemFrame.setRotation(0);
+                    }
+
                     InteractionResult interactionResult = itemFrame.interact(player, hand);
-                    if (interactionResult.consumesAction()) blockEntity.markUpdated();
+                    if (interactionResult.consumesAction()) {
+                        blockEntity.markUpdated();
+                    }
+
                     return interactionResult;
                 }
             }
         }
 
-        return super.useItemOn(stack, state, level, pos, player, hand, hitResult);
+        return super.useItemOn(itemInHand, state, level, pos, player, hand, hitResult);
     }
 
     @Override
@@ -201,9 +207,9 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
         if (level.getBlockEntity(blockPos) instanceof ItemFrameBlockEntity blockEntity) {
             ItemFrame itemFrame = blockEntity.getEntityRepresentation();
             return itemFrame != null && itemFrame.fixed;
+        } else {
+            return false;
         }
-
-        return false;
     }
 
     @Override
@@ -248,9 +254,8 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
 
             ItemStack itemStack = null;
             // it's fine to use proxy value as this is only called client-side
-            if (!ProxyImpl.get().hasControlDown() || ModLoaderEnvironment.INSTANCE.isClient() && !ProxyImpl.get()
-                    .getClientPlayer()
-                    .isCreative()) {
+            if (!CommonHelper.hasControlDown()
+                    || ModLoaderEnvironment.INSTANCE.isClient() && !CommonHelper.getClientPlayer().isCreative()) {
 
                 ItemFrame itemFrame = blockEntity.getEntityRepresentation();
                 if (itemFrame != null) {
@@ -270,9 +275,10 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
             }
 
             return itemStack;
-        }
+        } else {
 
-        return super.getCloneItemStack(level, blockPos, blockState, includeData);
+            return super.getCloneItemStack(level, blockPos, blockState, includeData);
+        }
     }
 
     public static ItemStack setItemFrameColor(ItemStack itemStack, @Nullable DyedItemColor color) {
