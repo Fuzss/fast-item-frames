@@ -24,12 +24,10 @@ public class ItemFrameBlockRenderer implements BlockEntityRenderer<ItemFrameBloc
     public static final Map<ModelResourceLocation, ResourceLocation> ITEM_FRAME_BLOCK_MODELS = ImmutableMap.<ModelResourceLocation, ResourceLocation>builder()
             .put(ModelResourceLocation.vanilla("item_frame", "map=false"), FastItemFrames.id("block/item_frame"))
             .put(ModelResourceLocation.vanilla("glow_item_frame", "map=false"),
-                    FastItemFrames.id("block/glow_item_frame")
-            )
+                    FastItemFrames.id("block/glow_item_frame"))
             .put(ModelResourceLocation.vanilla("item_frame", "map=true"), FastItemFrames.id("block/item_frame_map"))
             .put(ModelResourceLocation.vanilla("glow_item_frame", "map=true"),
-                    FastItemFrames.id("block/glow_item_frame_map")
-            )
+                    FastItemFrames.id("block/glow_item_frame_map"))
             .build();
 
     private final EntityRenderDispatcher entityRenderer;
@@ -43,29 +41,30 @@ public class ItemFrameBlockRenderer implements BlockEntityRenderer<ItemFrameBloc
         if (!blockEntity.getItem().isEmpty()) {
             ItemFrame itemFrame = blockEntity.getEntityRepresentation();
             if (itemFrame != null) {
-                EntityRenderer<? super ItemFrame> renderer = this.entityRenderer.getRenderer(itemFrame);
+                EntityRenderer<? super ItemFrame> entityRenderer = this.entityRenderer.getRenderer(itemFrame);
                 poseStack.pushPose();
                 poseStack.translate(0.5F, 0.25F, 0.5F);
                 Direction direction = itemFrame.getDirection();
                 poseStack.translate(direction.getStepX() * -0.1675F,
                         direction.getStepY() * -0.46875F,
-                        direction.getStepZ() * -0.1675F
-                );
+                        direction.getStepZ() * -0.1675F);
 
                 // the internal item frame entity is always set to invisible so the block itself does not render as it is handled as a block model
                 // we only use the renderer for the contained item
                 if (!blockEntity.isInvisible()) {
                     poseStack.translate(direction.getStepX() * 0.0625F,
                             direction.getStepY() * 0.0625F,
-                            direction.getStepZ() * 0.0625F
-                    );
+                            direction.getStepZ() * 0.0625F);
                 }
 
                 if (this.shouldShowName(blockEntity, itemFrame)) {
-                    renderer.renderNameTag(itemFrame, itemFrame.getDisplayName(), poseStack, buffer, packedLight);
+                    entityRenderer.renderNameTag(itemFrame, itemFrame.getDisplayName(), poseStack, buffer, packedLight);
                 }
 
-                renderer.render(itemFrame, 0.0F, partialTick, poseStack, buffer, packedLight);
+                boolean invisible = itemFrame.isInvisible();
+                itemFrame.setInvisible(true);
+                entityRenderer.render(itemFrame, 0.0F, partialTick, poseStack, buffer, packedLight);
+                itemFrame.setInvisible(invisible);
                 poseStack.popPose();
             }
         }
@@ -85,8 +84,11 @@ public class ItemFrameBlockRenderer implements BlockEntityRenderer<ItemFrameBloc
         if (Minecraft.renderNames() && !entity.getItem().isEmpty() && entity.getItem().hasCustomHoverName()) {
             Minecraft minecraft = Minecraft.getInstance();
             HitResult hitResult = minecraft.hitResult;
-            if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK && blockEntity.getBlockPos().equals((((BlockHitResult) hitResult).getBlockPos()))) {
-                double distanceToEntity = minecraft.gameRenderer.getMainCamera().getPosition().distanceToSqr(entity.position());
+            if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK && blockEntity.getBlockPos()
+                    .equals((((BlockHitResult) hitResult).getBlockPos()))) {
+                double distanceToEntity = minecraft.gameRenderer.getMainCamera()
+                        .getPosition()
+                        .distanceToSqr(entity.position());
                 double permittedDistance = entity.isDiscrete() ? 32.0 : 64.0;
                 return distanceToEntity < (permittedDistance * permittedDistance);
             }

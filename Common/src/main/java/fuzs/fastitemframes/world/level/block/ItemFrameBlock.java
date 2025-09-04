@@ -125,10 +125,10 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     @Override
     public VoxelShape getCollisionShape(BlockState state, BlockGetter blockGetter, BlockPos pos, CollisionContext context) {
         // to be able to implement BlockBehavior::onProjectileHit a projectile must be able to collide with this block
-        if (context instanceof EntityCollisionContext entityCollisionContext &&
-                entityCollisionContext.getEntity() instanceof Projectile projectile) {
-            if (blockGetter instanceof Level level && projectile.mayInteract(level, pos) &&
-                    projectile.getType().is(EntityTypeTags.IMPACT_PROJECTILES)) {
+        if (context instanceof EntityCollisionContext entityCollisionContext
+                && entityCollisionContext.getEntity() instanceof Projectile projectile) {
+            if (blockGetter instanceof Level level && projectile.mayInteract(level, pos) && projectile.getType()
+                    .is(EntityTypeTags.IMPACT_PROJECTILES)) {
                 return this.getShape(state, blockGetter, pos, context);
             }
         }
@@ -210,8 +210,8 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     @Override
     public void onProjectileHit(Level level, BlockState state, BlockHitResult hit, Projectile projectile) {
         BlockPos blockPos = hit.getBlockPos();
-        if (!level.isClientSide && !this.isFixed(level, blockPos) && projectile.mayInteract(level, blockPos) &&
-                projectile.getType().is(EntityTypeTags.IMPACT_PROJECTILES)) {
+        if (!level.isClientSide && !this.isFixed(level, blockPos) && projectile.mayInteract(level, blockPos)
+                && projectile.getType().is(EntityTypeTags.IMPACT_PROJECTILES)) {
             level.destroyBlock(blockPos, true, projectile);
             // update potentially attached comparators
             level.updateNeighborsAt(blockPos, this);
@@ -223,9 +223,12 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
         if (!state.is(newState.getBlock())) {
             if (level.getBlockEntity(pos) instanceof ItemFrameBlockEntity blockEntity) {
-                blockEntity.getEntityRepresentation().dropItem(null, false);
-                // not sure if this is necessary since the block entity is about to be deleted as well
-                blockEntity.setChanged();
+                ItemFrame itemFrame = blockEntity.getEntityRepresentation();
+                if (itemFrame != null) {
+                    itemFrame.dropItem(null, false);
+                    // not sure if this is necessary since the block entity is about to be deleted as well
+                    blockEntity.setChanged();
+                }
             }
 
             super.onRemove(state, level, pos, newState, movedByPiston);
@@ -256,8 +259,8 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
 
             ItemStack itemStack = null;
             // it's fine to use proxy value as this is only called client-side
-            if (!Proxy.INSTANCE.hasControlDown() ||
-                    ModLoaderEnvironment.INSTANCE.isClient() && !Proxy.INSTANCE.getClientPlayer().isCreative()) {
+            if (!Proxy.INSTANCE.hasControlDown()
+                    || ModLoaderEnvironment.INSTANCE.isClient() && !Proxy.INSTANCE.getClientPlayer().isCreative()) {
 
                 ItemFrame itemFrame = blockEntity.getEntityRepresentation();
                 if (itemFrame != null) {
