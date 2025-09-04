@@ -224,9 +224,12 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
         if (!state.is(newState.getBlock())) {
             if (level.getBlockEntity(pos) instanceof ItemFrameBlockEntity blockEntity) {
-                blockEntity.getEntityRepresentation().dropItem(null, false);
-                // not sure if this is necessary since the block entity is about to be deleted as well
-                blockEntity.setChanged();
+                ItemFrame itemFrame = blockEntity.getEntityRepresentation();
+                if (itemFrame != null) {
+                    itemFrame.dropItem(null, false);
+                    // not sure if this is necessary since the block entity is about to be deleted as well
+                    blockEntity.setChanged();
+                }
             }
 
             super.onRemove(state, level, pos, newState, movedByPiston);

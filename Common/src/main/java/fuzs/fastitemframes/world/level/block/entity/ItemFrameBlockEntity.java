@@ -171,20 +171,15 @@ public class ItemFrameBlockEntity extends BlockEntity implements TickingBlockEnt
     }
 
     private BlockState getUpdatedBlockState() {
-
         BlockState blockState = this.getBlockState();
         ItemFrame itemFrame = this.getEntityRepresentation();
         if (itemFrame != null) {
-
-            if (itemFrame.getItem().isEmpty() && blockState.getValue(ItemFrameBlock.INVISIBLE)) {
-                blockState = blockState.setValue(ItemFrameBlock.INVISIBLE, Boolean.FALSE);
-            }
-
             return blockState.setValue(ItemFrameBlock.HAS_MAP, itemFrame.hasFramedMap())
-                    .setValue(ItemFrameBlock.DYED, this.getColor().isPresent());
+                    .setValue(ItemFrameBlock.DYED, this.getColor().isPresent())
+                    .setValue(ItemFrameBlock.INVISIBLE, itemFrame.isInvisible() && !itemFrame.getItem().isEmpty());
+        } else {
+            return blockState;
         }
-
-        return blockState;
     }
 
     @Nullable
@@ -228,7 +223,5 @@ public class ItemFrameBlockEntity extends BlockEntity implements TickingBlockEnt
         itemFrame.setPos(pos.getX(), pos.getY(), pos.getZ());
         // force block facing e.g. when the item frame has been copied with nbt
         itemFrame.setDirection(this.getBlockState().getValue(ItemFrameBlock.FACING));
-        // just make those always invisible for client rendering, the actual block invisibility status is tracked via a block state
-        itemFrame.setInvisible(true);
     }
 }
