@@ -48,7 +48,7 @@ public class ItemFrameHandler {
 
                     serverLevel.setBlock(blockPos,
                             block.defaultBlockState().setValue(ItemFrameBlock.FACING, itemFrame.getDirection()),
-                            2);
+                            Block.UPDATE_ALL | Block.UPDATE_KNOWN_SHAPE);
 
                     if (serverLevel.getBlockEntity(blockPos) instanceof ItemFrameBlockEntity blockEntity) {
 
@@ -73,8 +73,8 @@ public class ItemFrameHandler {
                 itemFrame.setRotation(0);
             }
             if (player.isSecondaryUseActive()) {
-                if (player.getMainHandItem().isEmpty() && player.getOffhandItem().isEmpty() &&
-                        !itemFrame.getItem().isEmpty()) {
+                if (player.getMainHandItem().isEmpty() && player.getOffhandItem().isEmpty() && !itemFrame.getItem()
+                        .isEmpty()) {
                     // support toggling invisibility with empty hand + sneak+right-click just like for block
                     itemFrame.setInvisible(!itemFrame.isInvisible());
                     itemFrame.playSound(itemFrame.getRotateItemSound(), 1.0F, 1.0F);
