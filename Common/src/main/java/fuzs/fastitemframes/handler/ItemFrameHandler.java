@@ -52,8 +52,8 @@ public class ItemFrameHandler {
                 BlockPos blockPos = entity.blockPosition();
                 // require air, another item frame block might already be placed in this location, or a decorative block
                 // do not check for replaceable blocks, will break parity with vanilla otherwise
-                if (block != null && serverLevel.hasChunkAt(blockPos) &&
-                        (serverLevel.isEmptyBlock(blockPos) || serverLevel.getBlockState(blockPos).is(Blocks.WATER))) {
+                if (block != null && serverLevel.hasChunkAt(blockPos) && (serverLevel.isEmptyBlock(blockPos)
+                        || serverLevel.getBlockState(blockPos).is(Blocks.WATER))) {
 
                     BlockHitResult blockHitResult = new BlockHitResult(new Vec3(0.5, 0.5, 0.5),
                             itemFrame.getDirection(),
@@ -65,10 +65,10 @@ public class ItemFrameHandler {
                             ItemStack.EMPTY,
                             blockHitResult);
                     BlockState blockState = block.getStateForPlacement(blockPlaceContext);
-                    if (blockState != null && blockState.canSurvive(serverLevel, blockPos) &&
-                            serverLevel.isUnobstructed(blockState, blockPos, CollisionContext.empty())) {
+                    if (blockState != null && blockState.canSurvive(serverLevel, blockPos)
+                            && serverLevel.isUnobstructed(blockState, blockPos, CollisionContext.empty())) {
 
-                        serverLevel.setBlock(blockPos, blockState, 2);
+                        serverLevel.setBlock(blockPos, blockState, Block.UPDATE_ALL | Block.UPDATE_KNOWN_SHAPE);
                         if (serverLevel.getBlockEntity(blockPos) instanceof ItemFrameBlockEntity blockEntity) {
 
                             blockEntity.load(itemFrame);
@@ -93,8 +93,8 @@ public class ItemFrameHandler {
                 itemFrame.setRotation(0);
             }
             if (player.isSecondaryUseActive()) {
-                if (player.getMainHandItem().isEmpty() && player.getOffhandItem().isEmpty() &&
-                        !itemFrame.getItem().isEmpty()) {
+                if (player.getMainHandItem().isEmpty() && player.getOffhandItem().isEmpty() && !itemFrame.getItem()
+                        .isEmpty()) {
                     // support toggling invisibility with empty hand + sneak+right-click just like for block
                     itemFrame.setInvisible(!itemFrame.isInvisible());
                     itemFrame.playSound(itemFrame.getRotateItemSound(), 1.0F, 1.0F);
