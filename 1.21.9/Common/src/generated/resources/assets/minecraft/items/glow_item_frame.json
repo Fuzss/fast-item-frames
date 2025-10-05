@@ -1,0 +1,21 @@
+{
+  "model": {
+    "type": "minecraft:condition",
+    "component": "minecraft:dyed_color",
+    "on_false": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/glow_item_frame"
+    },
+    "on_true": {
+      "type": "minecraft:model",
+      "model": "fastitemframes:item/glow_item_frame",
+      "tints": [
+        {
+          "type": "minecraft:dye",
+          "default": -1
+        }
+      ]
+    },
+    "property": "minecraft:has_component"
+  }
+}
