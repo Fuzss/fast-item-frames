@@ -102,7 +102,7 @@ public class ItemFrameHandler {
                     // support toggling invisibility with empty hand + sneak+right-click just like for block
                     itemFrame.setInvisible(!itemFrame.isInvisible());
                     itemFrame.playSound(itemFrame.getRotateItemSound(), 1.0F, 1.0F);
-                    return EventResultHolder.interrupt(InteractionResultHelper.sidedSuccess(level.isClientSide));
+                    return EventResultHolder.interrupt(InteractionResultHelper.sidedSuccess(level.isClientSide()));
                 } else {
                     // don't allow sneak+right-clicking when hand not empty just like with the block
                     return EventResultHolder.interrupt(InteractionResult.PASS);

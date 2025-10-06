@@ -1,0 +1,46 @@
+package fuzs.fastitemframes.neoforge.mixin;
+
+import com.llamalad7.mixinextras.sugar.Local;
+import fuzs.fastitemframes.init.ModRegistry;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.decoration.HangingEntity;
+import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.item.HangingEntityItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.DyedItemColor;
+import net.minecraft.world.item.context.UseOnContext;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+/**
+ * @see fuzs.fastitemframes.mixin.HangingEntityItemMixin
+ */
+@Mixin(HangingEntityItem.class)
+abstract class HangingEntityItemNeoForgeMixin extends Item {
+
+    public HangingEntityItemNeoForgeMixin(Properties properties) {
+        super(properties);
+    }
+
+    @Inject(method = "useOn",
+            at = @At(value = "INVOKE",
+                    target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z",
+                    shift = At.Shift.BEFORE))
+    public void useOn(UseOnContext context, CallbackInfoReturnable<InteractionResult> callback, @Local HangingEntity hangingEntity) {
+        // we need to set the color before adding the entity to the level,
+        // so that our event can copy the color to the block entity if applicable
+        if (hangingEntity.getType().is(ModRegistry.ITEM_FRAMES_ENTITY_TYPE_TAG)
+                && hangingEntity instanceof ItemFrame itemFrame) {
+            ItemStack itemInHand = context.getItemInHand();
+            if (itemInHand.is(ItemTags.DYEABLE) && itemInHand.has(DataComponents.DYED_COLOR)) {
+                DyedItemColor color = itemInHand.get(DataComponents.DYED_COLOR);
+                ModRegistry.ITEM_FRAME_COLOR_ATTACHMENT_TYPE.set(itemFrame, color);
+            }
+        }
+    }
+}

@@ -107,7 +107,7 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
                     // support toggling invisibility via shift+right-clicking + empty hand
                     level.setBlock(pos, state.setValue(INVISIBLE, !state.getValue(INVISIBLE)), 2);
                     itemFrame.playSound(itemFrame.getRotateItemSound(), 1.0F, 1.0F);
-                    return InteractionResultHelper.sidedSuccess(level.isClientSide);
+                    return InteractionResultHelper.sidedSuccess(level.isClientSide());
                 } else {
 
                     if (itemFrame.getItem().isEmpty()) {
@@ -231,13 +231,13 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     }
 
     @Override
-    public boolean hasAnalogOutputSignal(BlockState state) {
+    public boolean hasAnalogOutputSignal(BlockState blockState) {
         return true;
     }
 
     @Override
-    public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
-        if (level.getBlockEntity(pos) instanceof ItemFrameBlockEntity blockEntity) {
+    public int getAnalogOutputSignal(BlockState blockState, Level level, BlockPos blockPos, Direction direction) {
+        if (level.getBlockEntity(blockPos) instanceof ItemFrameBlockEntity blockEntity) {
             ItemFrame itemFrame = blockEntity.getEntityRepresentation();
             if (itemFrame != null) {
                 return itemFrame.getAnalogOutput();
