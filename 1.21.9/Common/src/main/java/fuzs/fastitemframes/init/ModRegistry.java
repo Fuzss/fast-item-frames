@@ -36,12 +36,12 @@ public class ModRegistry {
             .setPlaceSound(SoundEvents.GLOW_ITEM_FRAME_PLACE);
 
     static final RegistryManager REGISTRIES = RegistryManager.from(FastItemFrames.MOD_ID);
-    public static final Holder.Reference<Block> ITEM_FRAME_BLOCK = registerItemFrame("item_frame",
-            Items.ITEM_FRAME,
-            ITEM_FRAME_SOUND_TYPE);
-    public static final Holder.Reference<Block> GLOW_ITEM_FRAME_BLOCK = registerItemFrame("glow_item_frame",
-            Items.GLOW_ITEM_FRAME,
-            GLOW_ITEM_FRAME_SOUND_TYPE);
+    public static final Holder.Reference<Block> ITEM_FRAME_BLOCK = REGISTRIES.registerBlock("item_frame",
+            (BlockBehaviour.Properties properties) -> new ItemFrameBlock(Items.ITEM_FRAME, properties),
+            () -> itemFrameProperties(Items.ITEM_FRAME, ITEM_FRAME_SOUND_TYPE));
+    public static final Holder.Reference<Block> GLOW_ITEM_FRAME_BLOCK = REGISTRIES.registerBlock("glow_item_frame",
+            (BlockBehaviour.Properties properties) -> new ItemFrameBlock(Items.GLOW_ITEM_FRAME, properties),
+            () -> itemFrameProperties(Items.GLOW_ITEM_FRAME, GLOW_ITEM_FRAME_SOUND_TYPE));
     public static final Holder.Reference<BlockEntityType<ItemFrameBlockEntity>> ITEM_FRAME_BLOCK_ENTITY = REGISTRIES.registerBlockEntityType(
             "item_frame",
             ItemFrameBlockEntity::new,
@@ -60,19 +60,17 @@ public class ModRegistry {
         // NO-OP
     }
 
-    private static Holder.Reference<Block> registerItemFrame(String path, Item item, SoundType soundType) {
-        return REGISTRIES.registerBlock(path,
-                (BlockBehaviour.Properties properties) -> new ItemFrameBlock(item, properties),
-                () -> BlockBehaviour.Properties.of()
-                        .mapColor(MapColor.SAND)
-                        .forceSolidOn()
-                        .instrument(NoteBlockInstrument.BASS)
-                        .noCollission()
-                        .strength(1.0F)
-                        .ignitedByLava()
-                        .instabreak()
-                        .pushReaction(PushReaction.DESTROY)
-                        .sound(soundType)
-                        .overrideDescription(item.getDescriptionId()));
+    private static BlockBehaviour.Properties itemFrameProperties(Item item, SoundType soundType) {
+        return BlockBehaviour.Properties.of()
+                .mapColor(MapColor.SAND)
+                .forceSolidOn()
+                .instrument(NoteBlockInstrument.BASS)
+                .noCollision()
+                .strength(1.0F)
+                .ignitedByLava()
+                .instabreak()
+                .pushReaction(PushReaction.DESTROY)
+                .sound(soundType)
+                .overrideDescription(item.getDescriptionId());
     }
 }

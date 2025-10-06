@@ -5,7 +5,6 @@
   "package": "${modGroup}.mixin",
   "mixins": [
     "GlowItemFrameMixin",
-    "HangingEntityItemMixin",
     "ItemFrameMixin"
   ],
   "client": [

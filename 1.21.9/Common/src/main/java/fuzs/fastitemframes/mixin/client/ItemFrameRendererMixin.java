@@ -3,16 +3,16 @@ package fuzs.fastitemframes.mixin.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import fuzs.fastitemframes.client.handler.ClientEventHandler;
 import fuzs.fastitemframes.client.renderer.blockentity.ItemFrameBlockRenderer;
-import fuzs.puzzleslib.api.client.renderer.v1.RenderPropertyKey;
-import net.minecraft.client.renderer.MultiBufferSource;
+import fuzs.puzzleslib.api.client.renderer.v1.RenderStateExtraData;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
-import net.minecraft.client.renderer.block.ModelBlockRenderer;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.ItemFrameRenderer;
 import net.minecraft.client.renderer.entity.state.ItemFrameRenderState;
+import net.minecraft.client.renderer.state.CameraRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.util.ARGB;
@@ -35,18 +35,17 @@ abstract class ItemFrameRendererMixin<T extends ItemFrame> extends EntityRendere
         super(context);
     }
 
-    @Inject(
-            method = "render", at = @At(
-            value = "FIELD",
-            target = "Lnet/minecraft/client/renderer/entity/state/ItemFrameRenderState;isInvisible:Z",
-            shift = At.Shift.BEFORE,
-            ordinal = 0
-    )
-    )
-    public void render(ItemFrameRenderState renderState, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, CallbackInfo callback) {
+    @Inject(method = "submit",
+            at = @At(value = "FIELD",
+                    target = "Lnet/minecraft/client/renderer/entity/state/ItemFrameRenderState;isInvisible:Z",
+                    shift = At.Shift.BEFORE,
+                    ordinal = 0))
+    public void submit(ItemFrameRenderState renderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState, CallbackInfo callback) {
         // vanilla item frame rendering is prevented by setting the frame to invisible during extraction of the render state
-        if (RenderPropertyKey.has(renderState, ClientEventHandler.COLOR_RENDER_PROPERTY_KEY)) {
-            int color = RenderPropertyKey.get(renderState, ClientEventHandler.COLOR_RENDER_PROPERTY_KEY);
+        if (RenderStateExtraData.has(renderState, ClientEventHandler.COLOR_RENDER_PROPERTY_KEY)) {
+            int color = RenderStateExtraData.getOrDefault(renderState,
+                    ClientEventHandler.COLOR_RENDER_PROPERTY_KEY,
+                    -1);
             BlockState blockState = ItemFrameBlockRenderer.getItemFrameBlockState(renderState.isGlowFrame,
                     renderState.mapId != null,
                     true);
@@ -56,14 +55,15 @@ abstract class ItemFrameRendererMixin<T extends ItemFrame> extends EntityRendere
             float red = ARGB.redFloat(color);
             float green = ARGB.greenFloat(color);
             float blue = ARGB.blueFloat(color);
-            ModelBlockRenderer.renderModel(poseStack.last(),
-                    bufferSource.getBuffer(RenderType.entitySolidZOffsetForward(TextureAtlas.LOCATION_BLOCKS)),
+            submitNodeCollector.submitBlockModel(poseStack,
+                    RenderType.entitySolidZOffsetForward(TextureAtlas.LOCATION_BLOCKS),
                     blockStateModel,
                     red,
                     green,
                     blue,
-                    packedLight,
-                    OverlayTexture.NO_OVERLAY);
+                    renderState.lightCoords,
+                    OverlayTexture.NO_OVERLAY,
+                    renderState.outlineColor);
             poseStack.popPose();
             // moved here from later in the method when stored invisibility boolean is called upon again
             if (!renderState.item.isEmpty()) {
