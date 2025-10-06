@@ -1,9 +1,11 @@
 package fuzs.fastitemframes.client.renderer.blockentity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import fuzs.fastitemframes.client.handler.ClientEventHandler;
 import fuzs.fastitemframes.init.ModRegistry;
 import fuzs.fastitemframes.world.level.block.ItemFrameBlock;
 import fuzs.fastitemframes.world.level.block.entity.ItemFrameBlockEntity;
+import fuzs.puzzleslib.api.client.renderer.v1.RenderPropertyKey;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
@@ -13,6 +15,7 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.ItemFrameRenderState;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.entity.EntityAttachment;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -64,18 +67,14 @@ public class ItemFrameBlockRenderer implements BlockEntityRenderer<ItemFrameBloc
                 }
 
                 ItemFrameRenderState renderState = entityRenderer.createRenderState(itemFrame, partialTick);
+                RenderPropertyKey.remove(renderState, ClientEventHandler.COLOR_RENDER_PROPERTY_KEY);
                 renderState.isInvisible = true;
-
                 if (this.shouldShowName(blockEntity, itemFrame)) {
                     renderState.nameTag = entityRenderer.getNameTag(itemFrame);
-                }
-
-                if (renderState.nameTag != null) {
-                    entityRenderer.renderNameTag(renderState,
-                            renderState.nameTag,
-                            poseStack,
-                            bufferSource,
-                            packedLight);
+                    renderState.nameTagAttachment = itemFrame.getAttachments()
+                            .getNullable(EntityAttachment.NAME_TAG, 0, itemFrame.getYRot(partialTick));
+                } else {
+                    renderState.nameTag = null;
                 }
 
                 entityRenderer.render(renderState, poseStack, bufferSource, packedLight);
