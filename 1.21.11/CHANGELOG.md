@@ -9,14 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Clicking on an item frame attached to a container block now interacts with that block instead of the item frame in
+  most cases (this behavior is configurable)
 - Items in invisible item frames now appear larger than items in normal frames; the scale can be changed in the config
 - Add a config option for removing the item render offset for invisible item frames (works great with custom item
-  texture models)
+  texture models known as CIT)
 - Add a config option for hiding the item name label when looking at an item frame holding an item with a custom name
 
 ### Changed
 
 - Update to Minecraft 1.21.11
+- Existing vanilla item frame entities are no longer converted automatically upon loading the chunks; instead, only
+  newly placed item frames will appear as blocks (this behavior is configurable)
 
 ### Fixed
 

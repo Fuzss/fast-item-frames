@@ -2,6 +2,8 @@ package fuzs.fastitemframes.world.level.block;
 
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import fuzs.fastitemframes.FastItemFrames;
+import fuzs.fastitemframes.config.ServerConfig;
 import fuzs.fastitemframes.handler.ItemFrameHandler;
 import fuzs.fastitemframes.init.ModRegistry;
 import fuzs.fastitemframes.world.level.block.entity.ItemFrameBlockEntity;
@@ -94,32 +96,43 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     }
 
     @Override
-    protected InteractionResult useItemOn(ItemStack itemInHand, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-        if (level.getBlockEntity(pos) instanceof ItemFrameBlockEntity blockEntity) {
+    protected InteractionResult useItemOn(ItemStack itemInHand, BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult hitResult) {
+        if (level.getBlockEntity(blockPos) instanceof ItemFrameBlockEntity blockEntity) {
             ItemFrame itemFrame = blockEntity.getEntityRepresentation();
-            if (itemFrame != null && !itemFrame.fixed) {
-                if (itemFrame.getItem().isEmpty()) {
-                    itemFrame.setRotation(0);
+            if (itemFrame != null) {
+                if (FastItemFrames.CONFIG.get(ServerConfig.class).passClicksToAttachedBlock) {
+                    if (ItemFrameHandler.interactWithAttachedBlockWhenClicked(player, itemFrame, itemInHand)) {
+                        BlockPos attachedBlockPos = blockPos.relative(blockState.getValue(FACING).getOpposite());
+                        InteractionResult interactionResult = ItemFrameHandler.passClicksToAttachedBlock(level,
+                                player,
+                                attachedBlockPos,
+                                hitResult.withPosition(attachedBlockPos));
+                        if (interactionResult != null) {
+                            return interactionResult;
+                        }
+                    }
                 }
 
-                if (player.isSecondaryUseActive()) {
-                    // Support toggling invisibility via shift+right-clicking with an empty hand.
-                    if (ItemFrameHandler.flipItemFrameInvisibility(itemFrame)) {
-                        blockEntity.markUpdated();
-                        return InteractionResult.SUCCESS;
-                    }
-                } else {
-                    InteractionResult interactionResult = itemFrame.interact(player, hand);
-                    if (interactionResult.consumesAction()) {
-                        blockEntity.markUpdated();
-                    }
+                if (!itemFrame.fixed) {
+                    if (player.isSecondaryUseActive()) {
+                        // Support toggling invisibility via shift+right-clicking with an empty hand.
+                        if (ItemFrameHandler.flipItemFrameInvisibility(itemFrame)) {
+                            blockEntity.markUpdated();
+                            return InteractionResult.SUCCESS;
+                        }
+                    } else {
+                        InteractionResult interactionResult = itemFrame.interact(player, interactionHand);
+                        if (interactionResult.consumesAction()) {
+                            blockEntity.markUpdated();
+                        }
 
-                    return interactionResult;
+                        return interactionResult;
+                    }
                 }
             }
         }
 
-        return super.useItemOn(itemInHand, state, level, pos, player, hand, hitResult);
+        return super.useItemOn(itemInHand, blockState, level, blockPos, player, interactionHand, hitResult);
     }
 
     @Override
