@@ -24,13 +24,9 @@ abstract class HangingEntityItemMixin extends Item {
         super(properties);
     }
 
-    @Inject(
-            method = "useOn", at = @At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z",
-            shift = At.Shift.BEFORE
-    )
-    )
+    @Inject(method = "useOn",
+            at = @At(value = "INVOKE",
+                     target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
     public void useOn(UseOnContext context, CallbackInfoReturnable<InteractionResult> callback, @Local HangingEntity hangingEntity) {
         // we need to set the color before adding the entity to the level,
         // so that our event can copy the color to the block entity if applicable
