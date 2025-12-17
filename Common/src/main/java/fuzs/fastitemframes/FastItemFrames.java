@@ -1,6 +1,7 @@
 package fuzs.fastitemframes;
 
 import fuzs.fastitemframes.config.ClientConfig;
+import fuzs.fastitemframes.config.ServerConfig;
 import fuzs.fastitemframes.handler.ItemFrameHandler;
 import fuzs.fastitemframes.init.ModRegistry;
 import fuzs.puzzleslib.api.config.v3.ConfigHolder;
@@ -30,7 +31,9 @@ public class FastItemFrames implements ModConstructor {
     public static final String MOD_NAME = "Fast Item Frames";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);
 
-    public static final ConfigHolder CONFIG = ConfigHolder.builder(MOD_ID).client(ClientConfig.class);
+    public static final ConfigHolder CONFIG = ConfigHolder.builder(MOD_ID)
+            .client(ClientConfig.class)
+            .server(ServerConfig.class);
 
     @Override
     public void onConstructMod() {
