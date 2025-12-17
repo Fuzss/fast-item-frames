@@ -2,11 +2,13 @@ package fuzs.fastitemframes.client.renderer.blockentity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import fuzs.fastitemframes.FastItemFrames;
+import fuzs.fastitemframes.client.handler.ClientEventHandler;
 import fuzs.fastitemframes.client.renderer.blockentity.state.ItemFrameBlockRenderState;
 import fuzs.fastitemframes.config.ClientConfig;
 import fuzs.fastitemframes.init.ModRegistry;
 import fuzs.fastitemframes.world.level.block.ItemFrameBlock;
 import fuzs.fastitemframes.world.level.block.entity.ItemFrameBlockEntity;
+import fuzs.puzzleslib.api.client.renderer.v1.RenderStateExtraData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
@@ -65,9 +67,15 @@ public class ItemFrameBlockRenderer implements BlockEntityRenderer<ItemFrameBloc
                     itemFrame);
             renderState.isInvisible = blockEntity.isInvisible();
             renderState.entityRenderState = entityRenderer.createRenderState(itemFrame, partialTick);
+            RenderStateExtraData.set(renderState.entityRenderState,
+                    ClientEventHandler.IS_BLOCK_VISIBLE_RENDER_PROPERTY_KEY,
+                    !blockEntity.isInvisible());
             // Prevent the item frame entity renderer from rendering the block itself, we only want it for rendering the item.
             renderState.entityRenderState.isInvisible = true;
-            if (this.shouldShowName(blockEntity, itemFrame, cameraPosition)) {
+            // The item frame entity shows it's name when it matches the entity picked by the crosshair, which is not possible anymore, as it's only internally stored on the block.
+            // So we need to fully reevaluate the name tag ourselves.
+            if (this.shouldShowName(blockEntity, itemFrame, cameraPosition)
+                    && !FastItemFrames.CONFIG.get(ClientConfig.class).disableNameTagRendering) {
                 renderState.entityRenderState.nameTag = entityRenderer.getNameTag(itemFrame);
                 renderState.entityRenderState.nameTagAttachment = itemFrame.getAttachments()
                         .getNullable(EntityAttachment.NAME_TAG, 0, itemFrame.getYRot(partialTick));
@@ -105,7 +113,7 @@ public class ItemFrameBlockRenderer implements BlockEntityRenderer<ItemFrameBloc
             // The internal item frame entity is always set to invisible, so the block itself does not render as it is handled as a block model.
             // We only use the renderer for the contained item.
             if (!renderState.isInvisible
-                    && !FastItemFrames.CONFIG.get(ClientConfig.class).disableItemOffsetWhenInvisible) {
+                    ) {
                 poseStack.translate(direction.getStepX() * 0.0625F,
                         direction.getStepY() * 0.0625F,
                         direction.getStepZ() * 0.0625F);
