@@ -1,12 +1,12 @@
 package fuzs.fastitemframes.client.renderer.blockentity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import fuzs.fastitemframes.client.handler.ClientEventHandler;
+import fuzs.fastitemframes.FastItemFrames;
 import fuzs.fastitemframes.client.renderer.blockentity.state.ItemFrameBlockRenderState;
+import fuzs.fastitemframes.config.ClientConfig;
 import fuzs.fastitemframes.init.ModRegistry;
 import fuzs.fastitemframes.world.level.block.ItemFrameBlock;
 import fuzs.fastitemframes.world.level.block.entity.ItemFrameBlockEntity;
-import fuzs.puzzleslib.api.client.renderer.v1.RenderStateExtraData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
@@ -65,7 +65,7 @@ public class ItemFrameBlockRenderer implements BlockEntityRenderer<ItemFrameBloc
                     itemFrame);
             renderState.isInvisible = blockEntity.isInvisible();
             renderState.entityRenderState = entityRenderer.createRenderState(itemFrame, partialTick);
-            RenderStateExtraData.remove(renderState.entityRenderState, ClientEventHandler.COLOR_RENDER_PROPERTY_KEY);
+            // Prevent the item frame entity renderer from rendering the block itself, we only want it for rendering the item.
             renderState.entityRenderState.isInvisible = true;
             if (this.shouldShowName(blockEntity, itemFrame, cameraPosition)) {
                 renderState.entityRenderState.nameTag = entityRenderer.getNameTag(itemFrame);
@@ -102,9 +102,10 @@ public class ItemFrameBlockRenderer implements BlockEntityRenderer<ItemFrameBloc
                     direction.getStepY() * -0.46875F,
                     direction.getStepZ() * -0.1675F);
 
-            // the internal item frame entity is always set to invisible so the block itself does not render as it is handled as a block model
-            // we only use the renderer for the contained item
-            if (!renderState.isInvisible) {
+            // The internal item frame entity is always set to invisible, so the block itself does not render as it is handled as a block model.
+            // We only use the renderer for the contained item.
+            if (!renderState.isInvisible
+                    && !FastItemFrames.CONFIG.get(ClientConfig.class).disableItemOffsetWhenInvisible) {
                 poseStack.translate(direction.getStepX() * 0.0625F,
                         direction.getStepY() * 0.0625F,
                         direction.getStepZ() * 0.0625F);

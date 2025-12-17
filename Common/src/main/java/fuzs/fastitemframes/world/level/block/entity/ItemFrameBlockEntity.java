@@ -164,9 +164,9 @@ public class ItemFrameBlockEntity extends BlockEntity implements TickingBlockEnt
 
     public void markUpdated() {
         if (this.hasLevel()) {
-            this.getLevel().setBlock(this.getBlockPos(), this.getUpdatedBlockState(), 2);
+            this.getLevel().setBlock(this.getBlockPos(), this.getUpdatedBlockState(), ItemFrameBlock.UPDATE_CLIENTS);
             this.setChanged();
-            this.getLevel().sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
+            this.getLevel().sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), ItemFrameBlock.UPDATE_ALL);
         }
     }
 

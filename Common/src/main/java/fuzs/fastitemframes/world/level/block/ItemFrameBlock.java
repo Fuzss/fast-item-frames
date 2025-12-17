@@ -2,12 +2,12 @@ package fuzs.fastitemframes.world.level.block;
 
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import fuzs.fastitemframes.handler.ItemFrameHandler;
 import fuzs.fastitemframes.init.ModRegistry;
 import fuzs.fastitemframes.world.level.block.entity.ItemFrameBlockEntity;
 import fuzs.puzzleslib.api.block.v1.entity.TickingEntityBlock;
 import fuzs.puzzleslib.api.core.v1.ModLoaderEnvironment;
 import fuzs.puzzleslib.api.util.v1.CommonHelper;
-import fuzs.puzzleslib.api.util.v1.InteractionResultHelper;
 import fuzs.puzzleslib.api.util.v1.ShapesHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -48,7 +48,6 @@ import org.jspecify.annotations.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
-@SuppressWarnings("deprecation")
 public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterloggedBlock, TickingEntityBlock<ItemFrameBlockEntity> {
     public static final MapCodec<ItemFrameBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
             BuiltInRegistries.ITEM.byNameCodec().fieldOf("item").forGetter(itemFrame -> itemFrame.item),
@@ -96,24 +95,20 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
 
     @Override
     protected InteractionResult useItemOn(ItemStack itemInHand, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-
         if (level.getBlockEntity(pos) instanceof ItemFrameBlockEntity blockEntity) {
-
             ItemFrame itemFrame = blockEntity.getEntityRepresentation();
-            if (itemFrame != null) {
+            if (itemFrame != null && !itemFrame.fixed) {
+                if (itemFrame.getItem().isEmpty()) {
+                    itemFrame.setRotation(0);
+                }
 
-                if (player.isSecondaryUseActive() && !this.isFixed(level, pos) && !itemFrame.getItem().isEmpty()) {
-
-                    // support toggling invisibility via shift+right-clicking + empty hand
-                    level.setBlock(pos, state.setValue(INVISIBLE, !state.getValue(INVISIBLE)), 2);
-                    itemFrame.playSound(itemFrame.getRotateItemSound(), 1.0F, 1.0F);
-                    return InteractionResultHelper.sidedSuccess(level.isClientSide());
-                } else {
-
-                    if (itemFrame.getItem().isEmpty()) {
-                        itemFrame.setRotation(0);
+                if (player.isSecondaryUseActive()) {
+                    // Support toggling invisibility via shift+right-clicking with an empty hand.
+                    if (ItemFrameHandler.flipItemFrameInvisibility(itemFrame)) {
+                        blockEntity.markUpdated();
+                        return InteractionResult.SUCCESS;
                     }
-
+                } else {
                     InteractionResult interactionResult = itemFrame.interact(player, hand);
                     if (interactionResult.consumesAction()) {
                         blockEntity.markUpdated();
@@ -160,13 +155,12 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         FluidState fluidState = context.getLevel().getFluidState(context.getClickedPos());
-        boolean waterlogged = fluidState.getType() == Fluids.WATER;
-        return this.defaultBlockState().setValue(FACING, context.getClickedFace()).setValue(WATERLOGGED, waterlogged);
+        boolean isWaterlogged = fluidState.getType() == Fluids.WATER;
+        return this.defaultBlockState().setValue(FACING, context.getClickedFace()).setValue(WATERLOGGED, isWaterlogged);
     }
 
     @Override
     protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess scheduledTickAccess, BlockPos pos, Direction direction, BlockPos neighborPos, BlockState neighborState, RandomSource random) {
-
         if (direction.getOpposite() == state.getValue(FACING) && !state.canSurvive(level, pos)) {
             return Blocks.AIR.defaultBlockState();
         }
@@ -249,34 +243,27 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
 
     @Override
     protected ItemStack getCloneItemStack(LevelReader level, BlockPos blockPos, BlockState blockState, boolean includeData) {
-
         if (level.getBlockEntity(blockPos) instanceof ItemFrameBlockEntity blockEntity) {
-
             ItemStack itemStack = null;
             // it's fine to use proxy value as this is only called client-side
             if (!CommonHelper.hasControlDown()
                     || ModLoaderEnvironment.INSTANCE.isClient() && !CommonHelper.getClientPlayer().isCreative()) {
-
                 ItemFrame itemFrame = blockEntity.getEntityRepresentation();
                 if (itemFrame != null) {
-
                     itemStack = itemFrame.getPickResult();
                 }
             }
 
             if (itemStack == null) {
-
                 itemStack = super.getCloneItemStack(level, blockPos, blockState, includeData);
             }
 
             if (itemStack.getItem() instanceof ItemFrameItem) {
-
                 setItemFrameColor(itemStack, blockEntity.getColor());
             }
 
             return itemStack;
         } else {
-
             return super.getCloneItemStack(level, blockPos, blockState, includeData);
         }
     }
@@ -285,6 +272,7 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
         if (color != null) {
             itemStack.set(DataComponents.DYED_COLOR, color);
         }
+
         return itemStack;
     }
 }

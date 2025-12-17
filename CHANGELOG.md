@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v21.11.0-1.21.11] - 2025-12-17
 
+### Added
+
+- Add a config option for removing the item render offset for invisible item frames (works great with custom item
+  texture models)
+
 ### Changed
 
 - Update to Minecraft 1.21.11
+
+### Fixed
+
+- Rotating items in invisible item frame blocks no longer makes them become visible again

@@ -5,7 +5,6 @@ import fuzs.fastitemframes.world.level.block.ItemFrameBlock;
 import fuzs.fastitemframes.world.level.block.entity.ItemFrameBlockEntity;
 import fuzs.puzzleslib.api.event.v1.core.EventResult;
 import fuzs.puzzleslib.api.event.v1.core.EventResultHolder;
-import fuzs.puzzleslib.api.util.v1.InteractionResultHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.TickTask;
 import net.minecraft.server.level.ServerLevel;
@@ -47,34 +46,20 @@ public class ItemFrameHandler {
     }
 
     public static EventResult onEntityLoad(Entity entity, ServerLevel serverLevel, boolean isFreshEntity) {
-
         if (entity.getType().is(ModRegistry.ITEM_FRAMES_ENTITY_TYPE_TAG) && entity instanceof ItemFrame itemFrame) {
-
             serverLevel.getServer().schedule(new TickTask(serverLevel.getServer().getTickCount(), () -> {
-
                 Block block = ItemFrameBlock.BY_ITEM.get(itemFrame.getFrameItemStack().getItem());
                 BlockPos blockPos = entity.blockPosition();
-                // require air, another item frame block might already be placed in this location, or a decorative block
-                // do not check for replaceable blocks, will break parity with vanilla otherwise
+                // Require air; another item frame block might already be placed in this location or a decorative block.
+                // Do not check for replaceable blocks, will break parity with vanilla otherwise.
                 if (block != null && serverLevel.hasChunkAt(blockPos) && (serverLevel.isEmptyBlock(blockPos)
                         || serverLevel.getBlockState(blockPos).is(Blocks.WATER))) {
-
-                    BlockHitResult blockHitResult = new BlockHitResult(new Vec3(0.5, 0.5, 0.5),
-                            itemFrame.getDirection(),
-                            blockPos.relative(itemFrame.getDirection().getOpposite()),
-                            false);
-                    BlockPlaceContext blockPlaceContext = new BlockPlaceContext(serverLevel,
-                            null,
-                            InteractionHand.MAIN_HAND,
-                            ItemStack.EMPTY,
-                            blockHitResult);
+                    BlockPlaceContext blockPlaceContext = getBlockPlaceContext(serverLevel, itemFrame, blockPos);
                     BlockState blockState = block.getStateForPlacement(blockPlaceContext);
                     if (blockState != null && blockState.canSurvive(serverLevel, blockPos)
                             && serverLevel.isUnobstructed(blockState, blockPos, CollisionContext.empty())) {
-
                         serverLevel.setBlock(blockPos, blockState, Block.UPDATE_ALL | Block.UPDATE_KNOWN_SHAPE);
                         if (serverLevel.getBlockEntity(blockPos) instanceof ItemFrameBlockEntity blockEntity) {
-
                             blockEntity.load(itemFrame);
                             blockEntity.setChanged();
                             // client caches the wrong block color when block entity data is synced in the same tick as the block being set
@@ -91,26 +76,47 @@ public class ItemFrameHandler {
         return EventResult.PASS;
     }
 
+    private static BlockPlaceContext getBlockPlaceContext(ServerLevel serverLevel, ItemFrame itemFrame, BlockPos blockPos) {
+        BlockHitResult blockHitResult = new BlockHitResult(new Vec3(0.5, 0.5, 0.5),
+                itemFrame.getDirection(),
+                blockPos.relative(itemFrame.getDirection().getOpposite()),
+                false);
+        return new BlockPlaceContext(serverLevel, null, InteractionHand.MAIN_HAND, ItemStack.EMPTY, blockHitResult);
+    }
+
     public static EventResultHolder<InteractionResult> onUseEntity(Player player, Level level, InteractionHand interactionHand, Entity entity) {
         if (entity.getType().is(ModRegistry.ITEM_FRAMES_ENTITY_TYPE_TAG) && entity instanceof ItemFrame itemFrame) {
-            if (!itemFrame.fixed && itemFrame.getItem().isEmpty()) {
-                itemFrame.setRotation(0);
-            }
-            if (player.isSecondaryUseActive()) {
-                if (player.getMainHandItem().isEmpty() && player.getOffhandItem().isEmpty() && !itemFrame.getItem()
+            if (!itemFrame.fixed) {
+                if (itemFrame.getItem().isEmpty()) {
+                    itemFrame.setRotation(0);
+                }
+
+                if (player.isSecondaryUseActive() && player.getMainHandItem().isEmpty() && player.getOffhandItem()
                         .isEmpty()) {
                     // support toggling invisibility with empty hand + sneak+right-click just like for block
-                    itemFrame.setInvisible(!itemFrame.isInvisible());
-                    itemFrame.playSound(itemFrame.getRotateItemSound(), 1.0F, 1.0F);
-                    return EventResultHolder.interrupt(InteractionResultHelper.sidedSuccess(level.isClientSide()));
-                } else {
-                    // don't allow sneak+right-clicking when hand not empty just like with the block
-                    return EventResultHolder.interrupt(InteractionResult.PASS);
+                    if (flipItemFrameInvisibility(itemFrame)) {
+                        return EventResultHolder.interrupt(InteractionResult.SUCCESS);
+                    }
                 }
+            }
+
+            if (player.isSecondaryUseActive()) {
+                // don't allow sneak+right-clicking when hand not empty just like with the block
+                return EventResultHolder.interrupt(InteractionResult.PASS);
             }
         }
 
         return EventResultHolder.pass();
+    }
+
+    public static boolean flipItemFrameInvisibility(ItemFrame itemFrame) {
+        if (!itemFrame.getItem().isEmpty()) {
+            itemFrame.setInvisible(!itemFrame.isInvisible());
+            itemFrame.playSound(itemFrame.getRotateItemSound(), 1.0F, 1.0F);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public static EventResult onAttackEntity(Player player, Level level, InteractionHand interactionHand, Entity entity) {
