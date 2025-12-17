@@ -1,0 +1,61 @@
+{
+    "mod": {
+        "id": "fastitemframes",
+        "group": "fuzs.fastitemframes",
+        "name": "Fast Item Frames",
+        "version": "21.11.0",
+        "authors": [
+            "Fuzs"
+        ],
+        "description": "Supercharged item frames! Less lag, better performance, and now they can change color and vanish!",
+        "license": "MPL-2.0"
+    },
+    "dependencies": [
+        {
+            "name": "fabricapi",
+            "type": "required",
+            "platforms": [
+                "fabric"
+            ]
+        },
+        {
+            "name": "forgeconfigapiport",
+            "type": "required",
+            "platforms": [
+                "fabric"
+            ]
+        },
+        {
+            "name": "puzzleslib",
+            "type": "required",
+            "platforms": [
+                "fabric",
+                "neoforge"
+            ]
+        }
+    ],
+    "links": [
+        {
+            "name": "github",
+            "slug": "fastitemframes"
+        },
+        {
+            "name": "curseforge",
+            "slug": "fast-item-frames",
+            "id": "1210171"
+        },
+        {
+            "name": "modrinth",
+            "slug": "fast-item-frames",
+            "id": "FsoeTIV0"
+        }
+    ],
+    "environments": {
+        "client": "required",
+        "server": "required"
+    },
+    "platforms": [
+        "fabric",
+        "neoforge"
+    ]
+}
