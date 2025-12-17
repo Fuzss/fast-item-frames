@@ -25,7 +25,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public class ItemFrameBlockRenderer implements BlockEntityRenderer<ItemFrameBlockEntity, ItemFrameBlockRenderState> {
     private final EntityRenderDispatcher entityRenderDispatcher;
@@ -53,7 +53,7 @@ public class ItemFrameBlockRenderer implements BlockEntityRenderer<ItemFrameBloc
     }
 
     @Override
-    public void extractRenderState(ItemFrameBlockEntity blockEntity, ItemFrameBlockRenderState renderState, float partialTick, Vec3 cameraPosition, @Nullable ModelFeatureRenderer.CrumblingOverlay crumblingOverlay) {
+    public void extractRenderState(ItemFrameBlockEntity blockEntity, ItemFrameBlockRenderState renderState, float partialTick, Vec3 cameraPosition, ModelFeatureRenderer.@Nullable CrumblingOverlay crumblingOverlay) {
         BlockEntityRenderer.super.extractRenderState(blockEntity,
                 renderState,
                 partialTick,

@@ -4,7 +4,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import fuzs.fastitemframes.client.handler.ClientEventHandler;
 import fuzs.fastitemframes.client.renderer.blockentity.ItemFrameBlockRenderer;
 import fuzs.puzzleslib.api.client.renderer.v1.RenderStateExtraData;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
@@ -12,6 +11,7 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.ItemFrameRenderer;
 import net.minecraft.client.renderer.entity.state.ItemFrameRenderState;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.CameraRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
@@ -37,9 +37,9 @@ abstract class ItemFrameRendererMixin<T extends ItemFrame> extends EntityRendere
 
     @Inject(method = "submit",
             at = @At(value = "FIELD",
-                    target = "Lnet/minecraft/client/renderer/entity/state/ItemFrameRenderState;isInvisible:Z",
-                    shift = At.Shift.BEFORE,
-                    ordinal = 0))
+                     target = "Lnet/minecraft/client/renderer/entity/state/ItemFrameRenderState;isInvisible:Z",
+                     shift = At.Shift.BEFORE,
+                     ordinal = 0))
     public void submit(ItemFrameRenderState renderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState, CallbackInfo callback) {
         // vanilla item frame rendering is prevented by setting the frame to invisible during extraction of the render state
         if (RenderStateExtraData.has(renderState, ClientEventHandler.COLOR_RENDER_PROPERTY_KEY)) {
@@ -56,7 +56,7 @@ abstract class ItemFrameRendererMixin<T extends ItemFrame> extends EntityRendere
             float green = ARGB.greenFloat(color);
             float blue = ARGB.blueFloat(color);
             submitNodeCollector.submitBlockModel(poseStack,
-                    RenderType.entitySolidZOffsetForward(TextureAtlas.LOCATION_BLOCKS),
+                    RenderTypes.entitySolidZOffsetForward(TextureAtlas.LOCATION_BLOCKS),
                     blockStateModel,
                     red,
                     green,

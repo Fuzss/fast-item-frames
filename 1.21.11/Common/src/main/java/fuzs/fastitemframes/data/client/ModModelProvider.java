@@ -7,7 +7,7 @@ import fuzs.fastitemframes.world.level.block.ItemFrameBlock;
 import fuzs.puzzleslib.api.client.data.v2.AbstractModelProvider;
 import fuzs.puzzleslib.api.client.data.v2.models.ModelLocationHelper;
 import fuzs.puzzleslib.api.client.data.v2.models.ModelTemplateHelper;
-import fuzs.puzzleslib.api.core.v1.utility.ResourceLocationHelper;
+import net.minecraft.resources.Identifier;
 import fuzs.puzzleslib.api.data.v2.core.DataProviderContext;
 import net.minecraft.client.color.item.Dye;
 import net.minecraft.client.data.models.BlockModelGenerators;
@@ -20,7 +20,7 @@ import net.minecraft.client.renderer.item.ItemModel;
 import net.minecraft.client.renderer.item.properties.conditional.HasComponent;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
@@ -78,9 +78,9 @@ public class ModModelProvider extends AbstractModelProvider {
         return createItemFrameMapping(ModelLocationHelper.getBlockTexture(block));
     }
 
-    public static TextureMapping createItemFrameMapping(ResourceLocation resourceLocation) {
+    public static TextureMapping createItemFrameMapping(Identifier identifier) {
         return new TextureMapping().put(WOOD, ModelLocationHelper.getBlockTexture(Blocks.BIRCH_PLANKS))
-                .put(TextureSlot.BACK, resourceLocation)
+                .put(TextureSlot.BACK, identifier)
                 .put(TextureSlot.PARTICLE, ModelLocationHelper.getBlockTexture(Blocks.BIRCH_PLANKS));
     }
 
@@ -91,15 +91,15 @@ public class ModModelProvider extends AbstractModelProvider {
     }
 
     public final void createItemFrame(Block block, BlockModelGenerators blockModelGenerators) {
-        ResourceLocation blockModel = ModelLocationHelper.getBlockModel(ResourceLocationHelper.withDefaultNamespace(
+        Identifier blockModel = ModelLocationHelper.getBlockModel(Identifier.withDefaultNamespace(
                 ModelLocationHelper.getBlockName(block)));
-        ResourceLocation mapModel = ModelLocationHelper.getBlockModel(ResourceLocationHelper.withDefaultNamespace(
+        Identifier mapModel = ModelLocationHelper.getBlockModel(Identifier.withDefaultNamespace(
                 ModelLocationHelper.getBlockName(block)), "_map");
-        ResourceLocation dyedBlockModel = TEMPLATE_ITEM_FRAME_DYED.createWithSuffix(block,
+        Identifier dyedBlockModel = TEMPLATE_ITEM_FRAME_DYED.createWithSuffix(block,
                 "_dyed",
                 createItemFrameMapping(block),
                 blockModelGenerators.modelOutput);
-        ResourceLocation dyedMapModel = TEMPLATE_ITEM_FRAME_MAP_DYED.createWithSuffix(block,
+        Identifier dyedMapModel = TEMPLATE_ITEM_FRAME_MAP_DYED.createWithSuffix(block,
                 "_map_dyed",
                 createItemFrameMapping(block),
                 blockModelGenerators.modelOutput);
@@ -107,28 +107,28 @@ public class ModModelProvider extends AbstractModelProvider {
     }
 
     public final void createGlowItemFrame(Block block, BlockModelGenerators blockModelGenerators) {
-        ResourceLocation blockModel = TEMPLATE_GLOW_ITEM_FRAME.create(block,
-                createItemFrameMapping(ModelLocationHelper.getBlockTexture(ResourceLocationHelper.withDefaultNamespace(
+        Identifier blockModel = TEMPLATE_GLOW_ITEM_FRAME.create(block,
+                createItemFrameMapping(ModelLocationHelper.getBlockTexture(Identifier.withDefaultNamespace(
                         ModelLocationHelper.getBlockName(block)))),
                 blockModelGenerators.modelOutput);
-        ResourceLocation mapModel = TEMPLATE_GLOW_ITEM_FRAME_MAP.createWithSuffix(block,
+        Identifier mapModel = TEMPLATE_GLOW_ITEM_FRAME_MAP.createWithSuffix(block,
                 "_map",
-                createItemFrameMapping(ModelLocationHelper.getBlockModel(ResourceLocationHelper.withDefaultNamespace(
+                createItemFrameMapping(ModelLocationHelper.getBlockModel(Identifier.withDefaultNamespace(
                         ModelLocationHelper.getBlockName(block)))),
                 blockModelGenerators.modelOutput);
-        ResourceLocation dyedBlockModel = TEMPLATE_GLOW_ITEM_FRAME_DYED.createWithSuffix(block,
+        Identifier dyedBlockModel = TEMPLATE_GLOW_ITEM_FRAME_DYED.createWithSuffix(block,
                 "_dyed",
                 createItemFrameMapping(block),
                 blockModelGenerators.modelOutput);
-        ResourceLocation dyedMapModel = TEMPLATE_GLOW_ITEM_FRAME_MAP_DYED.createWithSuffix(block,
+        Identifier dyedMapModel = TEMPLATE_GLOW_ITEM_FRAME_MAP_DYED.createWithSuffix(block,
                 "_map_dyed",
                 createItemFrameMapping(block),
                 blockModelGenerators.modelOutput);
         this.createItemFrame(block, blockModel, mapModel, dyedBlockModel, dyedMapModel, blockModelGenerators);
     }
 
-    public final void createItemFrame(Block block, ResourceLocation blockModel, ResourceLocation mapModel, ResourceLocation dyedBlockModel, ResourceLocation dyedMapModel, BlockModelGenerators blockModelGenerators) {
-        ResourceLocation invisibleModel = ModelTemplates.PARTICLE_ONLY.create(ModelLocationHelper.getBlockModel(block,
+    public final void createItemFrame(Block block, Identifier blockModel, Identifier mapModel, Identifier dyedBlockModel, Identifier dyedMapModel, BlockModelGenerators blockModelGenerators) {
+        Identifier invisibleModel = ModelTemplates.PARTICLE_ONLY.create(ModelLocationHelper.getBlockModel(block,
                 "_invisible"), TextureMapping.particle(Blocks.BIRCH_PLANKS), blockModelGenerators.modelOutput);
         blockModelGenerators.blockStateOutput.accept(MultiVariantGenerator.dispatch(block)
                 .with(PropertyDispatch.initial(ItemFrameBlock.MAP, ItemFrameBlock.DYED)
@@ -151,11 +151,11 @@ public class ModModelProvider extends AbstractModelProvider {
 
     public final void generateItemFrame(Item item, ItemModelGenerators itemModelGenerators) {
         ItemModel.Unbaked itemModel = ItemModelUtils.plainModel(ModelLocationHelper.getItemModel(item));
-        ResourceLocation resourceLocation = FastItemFrames.id(ModelLocationHelper.getItemName(item));
+        Identifier identifier = FastItemFrames.id(ModelLocationHelper.getItemName(item));
         ItemModel.Unbaked dyedModel = ItemModelUtils.tintedModel(itemModelGenerators.generateLayeredItem(
-                ModelLocationHelper.getItemModel(resourceLocation),
-                ModelLocationHelper.getItemTexture(resourceLocation),
-                ModelLocationHelper.getItemTexture(resourceLocation, "_overlay")), new Dye(-1));
+                ModelLocationHelper.getItemModel(identifier),
+                ModelLocationHelper.getItemTexture(identifier),
+                ModelLocationHelper.getItemTexture(identifier, "_overlay")), new Dye(-1));
         itemModelGenerators.generateBooleanDispatch(item,
                 new HasComponent(DataComponents.DYED_COLOR, false),
                 dyedModel,
