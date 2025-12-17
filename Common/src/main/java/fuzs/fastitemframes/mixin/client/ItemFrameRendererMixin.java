@@ -27,6 +27,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ItemFrameRenderer.class)
@@ -77,12 +78,25 @@ abstract class ItemFrameRendererMixin<T extends ItemFrame> extends EntityRendere
 
     @Inject(method = "submit(Lnet/minecraft/client/renderer/entity/state/ItemFrameRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/CameraRenderState;)V",
             at = @At(value = "FIELD",
-                     target = "Lnet/minecraft/client/renderer/entity/state/ItemFrameRenderState;isInvisible:Z",
-                     ordinal = 1,
-                     opcode = Opcodes.GETFIELD))
+                     target = "Lnet/minecraft/client/renderer/entity/state/ItemFrameRenderState;rotation:I",
+                     opcode = Opcodes.GETFIELD),
+            slice = @Slice(from = @At(value = "INVOKE",
+                                      target = "Lnet/minecraft/client/renderer/item/ItemStackRenderState;isEmpty()Z")))
     public void submit(ItemFrameRenderState renderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState, CallbackInfo callback) {
-        if (renderState.isInvisible && FastItemFrames.CONFIG.get(ClientConfig.class).disableItemOffsetWhenInvisible) {
-            poseStack.translate(0.0F, 0.0F, -0.0625F);
+        if (renderState.isInvisible && !RenderStateExtraData.getOrDefault(renderState,
+                ClientEventHandler.IS_BLOCK_VISIBLE_RENDER_PROPERTY_KEY,
+                Boolean.FALSE)) {
+            if (FastItemFrames.CONFIG.get(ClientConfig.class).disableItemOffsetWhenInvisible) {
+                poseStack.translate(0.0F, 0.0F, -0.0625F);
+            }
+
+            double itemScaleWhenInvisible = FastItemFrames.CONFIG.get(ClientConfig.class).itemScaleWhenInvisible;
+            // A config value of 0.5 is supposed to match vanilla, so it should result in a scale of 1.0.
+            // A scaling of 2.0 will render the item as 16x16 pixels, so it will fill a full block face.
+            if (itemScaleWhenInvisible != 0.5) {
+                float scaleValue = 2.0F * Math.max((float) itemScaleWhenInvisible, 0.05F);
+                poseStack.scale(scaleValue, scaleValue, scaleValue);
+            }
         }
     }
 }

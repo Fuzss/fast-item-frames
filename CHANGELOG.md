@@ -9,8 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Items in invisible item frames now appear larger than items in normal frames; the scale can be changed in the config
 - Add a config option for removing the item render offset for invisible item frames (works great with custom item
   texture models)
+- Add a config option for hiding the item name label when looking at an item frame holding an item with a custom name
 
 ### Changed
 

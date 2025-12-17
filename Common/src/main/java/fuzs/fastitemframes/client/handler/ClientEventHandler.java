@@ -1,6 +1,7 @@
 package fuzs.fastitemframes.client.handler;
 
 import fuzs.fastitemframes.FastItemFrames;
+import fuzs.fastitemframes.config.ClientConfig;
 import fuzs.fastitemframes.init.ModRegistry;
 import fuzs.fastitemframes.world.level.block.entity.ItemFrameBlockEntity;
 import fuzs.puzzleslib.api.client.renderer.v1.RenderStateExtraData;
@@ -20,6 +21,8 @@ import net.minecraft.world.level.Level;
 
 public class ClientEventHandler {
     public static final ContextKey<Integer> COLOR_RENDER_PROPERTY_KEY = new ContextKey<>(FastItemFrames.id("color"));
+    public static final ContextKey<Boolean> IS_BLOCK_VISIBLE_RENDER_PROPERTY_KEY = new ContextKey<>(FastItemFrames.id(
+            "is_block_visible"));
 
     public static EventResult onAttackBlock(Player player, Level level, InteractionHand interactionHand, BlockPos pos, Direction direction) {
         if (level.isClientSide()) {
@@ -45,6 +48,10 @@ public class ClientEventHandler {
                 RenderStateExtraData.set(renderState,
                         COLOR_RENDER_PROPERTY_KEY,
                         ModRegistry.ITEM_FRAME_COLOR_ATTACHMENT_TYPE.get(entity).rgb());
+            }
+
+            if (FastItemFrames.CONFIG.get(ClientConfig.class).disableNameTagRendering) {
+                renderState.nameTag = null;
             }
         }
     }
