@@ -15,6 +15,6 @@ public class ClientConfig implements ConfigCore {
             "Pick the scale of rendered items in invisible item frames.",
             "A scale value of 0.5 is equal to the default rendering of items in normal item frames."
     })
-    @Config.DoubleRange(min = 0.05, max = 1.0)
+    @Config.DoubleRange(min = 0.0, max = 1.0)
     public double itemScaleWhenInvisible = 0.75;
 }

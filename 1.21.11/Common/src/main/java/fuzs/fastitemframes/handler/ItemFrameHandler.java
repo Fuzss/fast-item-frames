@@ -12,17 +12,20 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.TickTask;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -30,19 +33,24 @@ import org.jspecify.annotations.Nullable;
 
 public class ItemFrameHandler {
 
-    public static EventResult onBreakBlock(ServerLevel level, BlockPos pos, BlockState state, Player player, ItemStack itemInHand) {
-        if (state.is(ModRegistry.ITEM_FRAMES_BLOCK_TAG)) {
-            if (level.getBlockEntity(pos) instanceof ItemFrameBlockEntity blockEntity) {
+    public static EventResult onBreakBlock(ServerLevel serverLevel, BlockPos blockPos, BlockState blockState, Player player, ItemStack itemInHand) {
+        if (blockState.is(ModRegistry.ITEM_FRAMES_BLOCK_TAG)) {
+            boolean isFixed = blockState.getValueOrElse(ItemFrameBlock.FIXED, Boolean.FALSE);
+            if (isFixed && !player.getAbilities().instabuild) {
+                return EventResult.INTERRUPT;
+            } else if (serverLevel.getBlockEntity(blockPos) instanceof ItemFrameBlockEntity blockEntity) {
                 ItemStack itemStack = blockEntity.getItem();
                 if (!itemStack.isEmpty()) {
-                    ItemFrame itemFrame = blockEntity.getEntityRepresentation();
-                    itemFrame.hurtServer(level, level.damageSources().playerAttack(player), 1.0F);
-                    if (itemFrame.getItem().isEmpty()) {
-                        itemFrame.setInvisible(false);
-                    }
-
+                    blockEntity.dropItem(serverLevel, blockPos, blockState, !player.getAbilities().instabuild);
+                    serverLevel.playSound(null,
+                            blockPos,
+                            blockEntity.getRemoveItemSound(),
+                            SoundSource.BLOCKS,
+                            1.0F,
+                            1.0F);
                     blockEntity.markUpdated();
-                    return EventResult.INTERRUPT;
+                    serverLevel.gameEvent(player, GameEvent.BLOCK_CHANGE, blockPos);
+                    return isFixed ? EventResult.PASS : EventResult.INTERRUPT;
                 }
             }
         }
@@ -60,25 +68,11 @@ public class ItemFrameHandler {
                     // Do not check for replaceable blocks, will break parity with vanilla otherwise.
                     if (block != null && serverLevel.hasChunkAt(blockPos) && (serverLevel.isEmptyBlock(blockPos)
                             || serverLevel.getBlockState(blockPos).is(Blocks.WATER))) {
-                        BlockHitResult blockHitResult = getBlockHitResult(itemFrame);
-                        BlockPlaceContext blockPlaceContext = new BlockPlaceContext(serverLevel,
-                                null,
-                                InteractionHand.MAIN_HAND,
-                                ItemStack.EMPTY,
-                                blockHitResult);
-                        BlockState blockState = block.getStateForPlacement(blockPlaceContext);
-                        if (blockState != null && blockState.canSurvive(serverLevel, blockPos)
-                                && serverLevel.isUnobstructed(blockState, blockPos, CollisionContext.empty())) {
-                            serverLevel.setBlock(blockPos, blockState, Block.UPDATE_ALL | Block.UPDATE_KNOWN_SHAPE);
-                            if (serverLevel.getBlockEntity(blockPos) instanceof ItemFrameBlockEntity blockEntity) {
-                                blockEntity.load(itemFrame);
-                                blockEntity.setChanged();
-                                // client caches the wrong block color when block entity data is synced in the same tick as the block being set
-                                // this will cause a brief flicker, but the color will show correctly after that
-                                blockEntity.markUpdated();
-                            }
-
-                            itemFrame.discard();
+                        BlockState blockState = getItemFrameStateForPlacement(serverLevel, block, blockPos, itemFrame);
+                        if (blockState != null) {
+                            setItemFrameBlock(serverLevel, blockPos, blockState, itemFrame);
+                            // Use kill, not discard, so that the item frame is properly removed from a potential map item it is holding.
+                            itemFrame.kill(serverLevel);
                         }
                     }
                 }));
@@ -86,6 +80,38 @@ public class ItemFrameHandler {
         }
 
         return EventResult.PASS;
+    }
+
+    private static @Nullable BlockState getItemFrameStateForPlacement(ServerLevel serverLevel, Block block, BlockPos blockPos, ItemFrame itemFrame) {
+        BlockHitResult blockHitResult = getBlockHitResult(itemFrame);
+        BlockPlaceContext blockPlaceContext = new BlockPlaceContext(serverLevel,
+                null,
+                InteractionHand.MAIN_HAND,
+                ItemStack.EMPTY,
+                blockHitResult);
+        BlockState blockState = block.getStateForPlacement(blockPlaceContext);
+        if (blockState != null && blockState.canSurvive(serverLevel, blockPos) && serverLevel.isUnobstructed(blockState,
+                blockPos,
+                CollisionContext.empty())) {
+            return blockState;
+        } else {
+            return null;
+        }
+    }
+
+    private static void setItemFrameBlock(ServerLevel serverLevel, BlockPos blockPos, BlockState blockState, ItemFrame itemFrame) {
+        DyedItemColor dyedItemColor = ModRegistry.ITEM_FRAME_COLOR_ATTACHMENT_TYPE.get(itemFrame);
+        serverLevel.setBlock(blockPos,
+                blockState.setValue(ItemFrameBlock.ROTATION, itemFrame.getRotation())
+                        .setValue(ItemFrameBlock.FIXED, itemFrame.fixed)
+                        .setValue(ItemFrameBlock.DYED, dyedItemColor != null),
+                Block.UPDATE_ALL | Block.UPDATE_KNOWN_SHAPE);
+        if (serverLevel.getBlockEntity(blockPos) instanceof ItemFrameBlockEntity blockEntity) {
+            blockEntity.setItem(0, itemFrame.getItem());
+            blockEntity.setDropChance(itemFrame.dropChance);
+            blockEntity.setColor(dyedItemColor);
+            blockEntity.markUpdated();
+        }
     }
 
     private static BlockHitResult getBlockHitResult(ItemFrame itemFrame) {
@@ -99,7 +125,7 @@ public class ItemFrameHandler {
         if (entity.getType().is(ModRegistry.ITEM_FRAMES_ENTITY_TYPE_TAG) && entity instanceof ItemFrame itemFrame) {
             if (FastItemFrames.CONFIG.get(ServerConfig.class).passClicksToAttachedBlock) {
                 ItemStack itemInHand = player.getItemInHand(interactionHand);
-                if (interactWithAttachedBlockWhenClicked(player, itemFrame, itemInHand)) {
+                if (interactWithAttachedBlockWhenClicked(player, itemFrame.fixed, itemFrame.getItem(), itemInHand)) {
                     BlockPos blockPos = itemFrame.blockPosition().relative(itemFrame.getDirection().getOpposite());
                     InteractionResult interactionResult = ItemFrameHandler.passClicksToAttachedBlock(level,
                             player,
@@ -112,10 +138,14 @@ public class ItemFrameHandler {
             }
 
             if (!itemFrame.fixed) {
+                // The entity requires additional checks compared to the block.
                 if (player.isSecondaryUseActive() && player.getMainHandItem().isEmpty() && player.getOffhandItem()
                         .isEmpty()) {
                     // support toggling invisibility with empty hand + sneak+right-click just like for block
-                    if (flipItemFrameInvisibility(itemFrame)) {
+                    if (!itemFrame.getItem().isEmpty()) {
+                        itemFrame.playSound(itemFrame.getRotateItemSound(), 1.0F, 1.0F);
+                        itemFrame.setInvisible(!itemFrame.isInvisible());
+                        itemFrame.gameEvent(GameEvent.BLOCK_CHANGE, player);
                         return EventResultHolder.interrupt(InteractionResult.SUCCESS);
                     }
                 }
@@ -130,9 +160,8 @@ public class ItemFrameHandler {
         return EventResultHolder.pass();
     }
 
-    public static boolean interactWithAttachedBlockWhenClicked(Player player, ItemFrame itemFrame, ItemStack itemStack) {
-        return !player.isSecondaryUseActive() && (itemFrame.fixed || !itemFrame.getItem().isEmpty()
-                || itemStack.isEmpty());
+    public static boolean interactWithAttachedBlockWhenClicked(Player player, boolean isFixed, ItemStack itemFrameItem, ItemStack itemInHand) {
+        return !player.isSecondaryUseActive() && (isFixed || !itemFrameItem.isEmpty() || itemInHand.isEmpty());
     }
 
     public static @Nullable InteractionResult passClicksToAttachedBlock(Level level, Player player, BlockPos blockPos, BlockHitResult hitResult) {
@@ -146,16 +175,6 @@ public class ItemFrameHandler {
             return interactionResult;
         } else {
             return null;
-        }
-    }
-
-    public static boolean flipItemFrameInvisibility(ItemFrame itemFrame) {
-        if (!itemFrame.getItem().isEmpty()) {
-            itemFrame.setInvisible(!itemFrame.isInvisible());
-            itemFrame.playSound(itemFrame.getRotateItemSound(), 1.0F, 1.0F);
-            return true;
-        } else {
-            return false;
         }
     }
 
