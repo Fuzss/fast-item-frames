@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v21.11.1-1.21.11] - 2025-12-23
+
+### Changed
+
+- Move most block properties from the internal item frame entity to the block state
+- This includes proper support for the `ItemDropChance` and `Fixed` properties item frames may have
+
 ## [v21.11.0-1.21.11] - 2025-12-17
 
 ### Added

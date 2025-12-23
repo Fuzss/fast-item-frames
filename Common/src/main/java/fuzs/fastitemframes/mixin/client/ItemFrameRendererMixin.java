@@ -94,7 +94,8 @@ abstract class ItemFrameRendererMixin<T extends ItemFrame> extends EntityRendere
             // A config value of 0.5 is supposed to match vanilla, so it should result in a scale of 1.0.
             // A scaling of 2.0 will render the item as 16x16 pixels, so it will fill a full block face.
             if (itemScaleWhenInvisible != 0.5) {
-                float scaleValue = 2.0F * Math.max((float) itemScaleWhenInvisible, 0.05F);
+                // Prevent z-fighting and scaling by zero.
+                float scaleValue = 2.0F * (float) Math.clamp(itemScaleWhenInvisible, 0.0005, 0.9995);
                 poseStack.scale(scaleValue, scaleValue, scaleValue);
             }
         }

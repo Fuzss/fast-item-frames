@@ -16,6 +16,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
@@ -26,6 +27,7 @@ import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemFrameItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.MapItem;
 import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
@@ -39,8 +41,11 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.EntityCollisionContext;
@@ -56,8 +61,10 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
             propertiesCodec()).apply(instance, ItemFrameBlock::new));
     public static final EnumProperty<Direction> FACING = BlockStateProperties.FACING;
     public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
+    public static final IntegerProperty ROTATION = IntegerProperty.create("rotation", 0, ItemFrame.NUM_ROTATIONS - 1);
     public static final BooleanProperty MAP = BlockStateProperties.MAP;
     public static final BooleanProperty INVISIBLE = BooleanProperty.create("invisible");
+    public static final BooleanProperty FIXED = BooleanProperty.create("fixed");
     public static final BooleanProperty DYED = BooleanProperty.create("dyed");
     static final VoxelShape SHAPE = box(2.0, 0.0, 2.0, 14.0, 1.0, 14.0);
     static final VoxelShape MAP_SHAPE = box(0.0, 0.0, 0.0, 16.0, 1.0, 16.0);
@@ -73,8 +80,10 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
         this.registerDefaultState(this.stateDefinition.any()
                 .setValue(FACING, Direction.NORTH)
                 .setValue(WATERLOGGED, Boolean.FALSE)
+                .setValue(ROTATION, 0)
                 .setValue(MAP, Boolean.FALSE)
                 .setValue(INVISIBLE, Boolean.FALSE)
+                .setValue(FIXED, Boolean.FALSE)
                 .setValue(DYED, Boolean.FALSE));
         Item.BY_BLOCK.put(this, item);
         BY_ITEM.put(item, this);
@@ -91,43 +100,41 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     }
 
     @Override
-    public RenderShape getRenderShape(BlockState state) {
-        return RenderShape.MODEL;
-    }
-
-    @Override
     protected InteractionResult useItemOn(ItemStack itemInHand, BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult hitResult) {
         if (level.getBlockEntity(blockPos) instanceof ItemFrameBlockEntity blockEntity) {
-            ItemFrame itemFrame = blockEntity.getEntityRepresentation();
-            if (itemFrame != null) {
-                if (FastItemFrames.CONFIG.get(ServerConfig.class).passClicksToAttachedBlock) {
-                    if (ItemFrameHandler.interactWithAttachedBlockWhenClicked(player, itemFrame, itemInHand)) {
-                        BlockPos attachedBlockPos = blockPos.relative(blockState.getValue(FACING).getOpposite());
-                        InteractionResult interactionResult = ItemFrameHandler.passClicksToAttachedBlock(level,
-                                player,
-                                attachedBlockPos,
-                                hitResult.withPosition(attachedBlockPos));
-                        if (interactionResult != null) {
-                            return interactionResult;
-                        }
-                    }
-                }
-
-                if (!itemFrame.fixed) {
-                    if (player.isSecondaryUseActive()) {
-                        // Support toggling invisibility via shift+right-clicking with an empty hand.
-                        if (ItemFrameHandler.flipItemFrameInvisibility(itemFrame)) {
-                            blockEntity.markUpdated();
-                            return InteractionResult.SUCCESS;
-                        }
-                    } else {
-                        InteractionResult interactionResult = itemFrame.interact(player, interactionHand);
-                        if (interactionResult.consumesAction()) {
-                            blockEntity.markUpdated();
-                        }
-
+            Boolean isFixed = blockState.getValue(FIXED);
+            if (FastItemFrames.CONFIG.get(ServerConfig.class).passClicksToAttachedBlock) {
+                if (ItemFrameHandler.interactWithAttachedBlockWhenClicked(player,
+                        isFixed,
+                        blockEntity.getItem(),
+                        itemInHand)) {
+                    BlockPos attachedBlockPos = blockPos.relative(blockState.getValue(FACING).getOpposite());
+                    InteractionResult interactionResult = ItemFrameHandler.passClicksToAttachedBlock(level,
+                            player,
+                            attachedBlockPos,
+                            hitResult.withPosition(attachedBlockPos));
+                    if (interactionResult != null) {
                         return interactionResult;
                     }
+                }
+            }
+
+            if (!isFixed) {
+                if (player.isSecondaryUseActive()) {
+                    // Support toggling invisibility via shift+right-clicking with an empty hand.
+                    if (!blockEntity.getItem().isEmpty()) {
+                        level.playSound(null,
+                                blockPos,
+                                blockEntity.getRotateItemSound(),
+                                SoundSource.BLOCKS,
+                                1.0F,
+                                1.0F);
+                        level.setBlock(blockPos, blockState.cycle(INVISIBLE), Block.UPDATE_ALL);
+                        level.gameEvent(player, GameEvent.BLOCK_CHANGE, blockPos);
+                        return InteractionResult.SUCCESS;
+                    }
+                } else {
+                    return this.interact(blockEntity, itemInHand, blockState, level, blockPos, player, interactionHand);
                 }
             }
         }
@@ -135,33 +142,70 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
         return super.useItemOn(itemInHand, blockState, level, blockPos, player, interactionHand, hitResult);
     }
 
-    @Override
-    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return state.getValue(MAP) ? MAP_SHAPES.get(state.getValue(FACING)) : SHAPES.get(state.getValue(FACING));
+    /**
+     * @see ItemFrame#interact(Player, InteractionHand)
+     */
+    public InteractionResult interact(ItemFrameBlockEntity blockEntity, ItemStack itemInHand, BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand) {
+        if (blockState.getValue(ItemFrameBlock.FIXED)) {
+            return InteractionResult.PASS;
+        } else if (!player.level().isClientSide()) {
+            if (blockEntity.getItem().isEmpty()) {
+                if (!itemInHand.isEmpty() && !blockEntity.isRemoved()) {
+                    MapItemSavedData mapItemSavedData = MapItem.getSavedData(itemInHand, level);
+                    if (mapItemSavedData != null && mapItemSavedData.isTrackedCountOverLimit(256)) {
+                        return InteractionResult.FAIL;
+                    } else {
+                        blockEntity.setItem(0, itemInHand.copyWithCount(1));
+                        level.playSound(null, blockPos, blockEntity.getAddItemSound(), SoundSource.BLOCKS, 1.0F, 1.0F);
+                        blockEntity.markUpdated();
+                        level.gameEvent(player, GameEvent.BLOCK_CHANGE, blockPos);
+                        itemInHand.consume(1, player);
+                        return InteractionResult.SUCCESS;
+                    }
+                } else {
+                    return InteractionResult.PASS;
+                }
+            } else {
+                level.playSound(null, blockPos, blockEntity.getRotateItemSound(), SoundSource.BLOCKS, 1.0F, 1.0F);
+                level.setBlock(blockPos, blockState.cycle(ItemFrameBlock.ROTATION), ItemFrameBlock.UPDATE_ALL);
+                level.gameEvent(player, GameEvent.BLOCK_CHANGE, blockPos);
+                return InteractionResult.SUCCESS;
+            }
+        } else {
+            return blockEntity.getItem().isEmpty() && itemInHand.isEmpty() ? InteractionResult.PASS :
+                    InteractionResult.SUCCESS;
+        }
     }
 
     @Override
-    public VoxelShape getCollisionShape(BlockState state, BlockGetter blockGetter, BlockPos pos, CollisionContext context) {
+    public VoxelShape getShape(BlockState blockState, BlockGetter level, BlockPos blockPos, CollisionContext context) {
+        return blockState.getValue(MAP) ? MAP_SHAPES.get(blockState.getValue(FACING)) :
+                SHAPES.get(blockState.getValue(FACING));
+    }
+
+    @Override
+    public VoxelShape getCollisionShape(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, CollisionContext context) {
         // to be able to implement BlockBehavior::onProjectileHit a projectile must be able to collide with this block
         if (context instanceof EntityCollisionContext entityCollisionContext
                 && entityCollisionContext.getEntity() instanceof Projectile projectile) {
-            if (blockGetter instanceof ServerLevel serverLevel && projectile.mayInteract(serverLevel, pos)
+            if (blockGetter instanceof ServerLevel serverLevel && projectile.mayInteract(serverLevel, blockPos)
                     && projectile.mayBreak(serverLevel)) {
-                return this.getShape(state, blockGetter, pos, context);
+                return this.getShape(blockState, blockGetter, blockPos, context);
             }
         }
 
-        return super.getCollisionShape(state, blockGetter, pos, context);
+        return super.getCollisionShape(blockState, blockGetter, blockPos, context);
     }
 
     @Override
-    public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
-        if (this.isFixed(level, pos)) {
+    public boolean canSurvive(BlockState blockState, LevelReader level, BlockPos blockPos) {
+        if (blockState.getValue(FIXED)) {
             return true;
         } else {
-            BlockState blockState = level.getBlockState(pos.relative(state.getValue(FACING).getOpposite()));
+            BlockState attachedBlockState = level.getBlockState(blockPos.relative(blockState.getValue(FACING)
+                    .getOpposite()));
             // some weird behavior from the entity for repeaters / comparators
-            return blockState.isSolid() || DiodeBlock.isDiode(blockState);
+            return attachedBlockState.isSolid() || DiodeBlock.isDiode(attachedBlockState);
         }
     }
 
@@ -173,21 +217,28 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     }
 
     @Override
-    protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess scheduledTickAccess, BlockPos pos, Direction direction, BlockPos neighborPos, BlockState neighborState, RandomSource random) {
-        if (direction.getOpposite() == state.getValue(FACING) && !state.canSurvive(level, pos)) {
+    protected BlockState updateShape(BlockState blockState, LevelReader level, ScheduledTickAccess scheduledTickAccess, BlockPos blockPos, Direction direction, BlockPos neighborBlockPos, BlockState neighborBlockState, RandomSource random) {
+        if (direction.getOpposite() == blockState.getValue(FACING) && !blockState.canSurvive(level, blockPos)) {
             return Blocks.AIR.defaultBlockState();
         }
 
-        if (state.getValue(WATERLOGGED)) {
-            scheduledTickAccess.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
+        if (blockState.getValue(WATERLOGGED)) {
+            scheduledTickAccess.scheduleTick(blockPos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
         }
 
-        return super.updateShape(state, level, scheduledTickAccess, pos, direction, neighborPos, neighborState, random);
+        return super.updateShape(blockState,
+                level,
+                scheduledTickAccess,
+                blockPos,
+                direction,
+                neighborBlockPos,
+                neighborBlockState,
+                random);
     }
 
     @Override
-    public FluidState getFluidState(BlockState state) {
-        return state.getValue(WATERLOGGED) ? Fluids.WATER.getSource(false) : super.getFluidState(state);
+    public FluidState getFluidState(BlockState blockState) {
+        return blockState.getValue(WATERLOGGED) ? Fluids.WATER.getSource(false) : super.getFluidState(blockState);
     }
 
     @Override
@@ -196,39 +247,29 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     }
 
     @Override
-    public BlockState rotate(BlockState state, Rotation rotation) {
-        return state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
+    public BlockState rotate(BlockState blockState, Rotation rotation) {
+        return blockState.setValue(FACING, rotation.rotate(blockState.getValue(FACING)));
     }
 
     @Override
-    public BlockState mirror(BlockState state, Mirror mirror) {
-        return state.rotate(mirror.getRotation(state.getValue(FACING)));
+    public BlockState mirror(BlockState blockState, Mirror mirror) {
+        return blockState.rotate(mirror.getRotation(blockState.getValue(FACING)));
     }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(FACING, INVISIBLE, MAP, WATERLOGGED, DYED);
-    }
-
-    public boolean isFixed(LevelReader level, BlockPos blockPos) {
-        if (level.getBlockEntity(blockPos) instanceof ItemFrameBlockEntity blockEntity) {
-            ItemFrame itemFrame = blockEntity.getEntityRepresentation();
-            return itemFrame != null && itemFrame.fixed;
-        } else {
-            return false;
-        }
+        builder.add(FACING, ROTATION, INVISIBLE, FIXED, MAP, WATERLOGGED, DYED);
     }
 
     @Override
-    public void onProjectileHit(Level level, BlockState state, BlockHitResult hit, Projectile projectile) {
-        BlockPos blockPos = hit.getBlockPos();
-        if (level instanceof ServerLevel serverLevel && !this.isFixed(level, blockPos) && projectile.mayInteract(
-                serverLevel,
-                blockPos) && projectile.mayBreak(serverLevel)) {
+    public void onProjectileHit(Level level, BlockState blockState, BlockHitResult hitResult, Projectile projectile) {
+        BlockPos blockPos = hitResult.getBlockPos();
+        if (level instanceof ServerLevel serverLevel && !level.getBlockState(blockPos).getValue(FIXED)
+                && projectile.mayInteract(serverLevel, blockPos) && projectile.mayBreak(serverLevel)) {
             level.destroyBlock(blockPos, true, projectile);
             // update potentially attached comparators
             level.updateNeighborsAt(blockPos, this);
-            level.updateNeighborsAt(blockPos.relative(state.getValue(FACING).getOpposite()), this);
+            level.updateNeighborsAt(blockPos.relative(blockState.getValue(FACING).getOpposite()), this);
         }
     }
 
@@ -242,37 +283,24 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
         return true;
     }
 
+    /**
+     * @see ItemFrame#getAnalogOutput()
+     */
     @Override
     public int getAnalogOutputSignal(BlockState blockState, Level level, BlockPos blockPos, Direction direction) {
         if (level.getBlockEntity(blockPos) instanceof ItemFrameBlockEntity blockEntity) {
-            ItemFrame itemFrame = blockEntity.getEntityRepresentation();
-            if (itemFrame != null) {
-                return itemFrame.getAnalogOutput();
-            }
+            return blockEntity.getItem().isEmpty() ? 0 : blockState.getValue(ROTATION) % ItemFrame.NUM_ROTATIONS + 1;
+        } else {
+            return 0;
         }
-
-        return 0;
     }
 
     @Override
     protected ItemStack getCloneItemStack(LevelReader level, BlockPos blockPos, BlockState blockState, boolean includeData) {
         if (level.getBlockEntity(blockPos) instanceof ItemFrameBlockEntity blockEntity) {
-            ItemStack itemStack = null;
-            // it's fine to use proxy value as this is only called client-side
-            if (!CommonHelper.hasControlDown()
-                    || ModLoaderEnvironment.INSTANCE.isClient() && !CommonHelper.getClientPlayer().isCreative()) {
-                ItemFrame itemFrame = blockEntity.getEntityRepresentation();
-                if (itemFrame != null) {
-                    itemStack = itemFrame.getPickResult();
-                }
-            }
-
-            if (itemStack == null) {
-                itemStack = super.getCloneItemStack(level, blockPos, blockState, includeData);
-            }
-
+            ItemStack itemStack = this.getPickResult(level, blockPos, blockState, includeData, blockEntity);
             if (itemStack.getItem() instanceof ItemFrameItem) {
-                setItemFrameColor(itemStack, blockEntity.getColor());
+                setItemStackColor(itemStack, blockEntity.getColor());
             }
 
             return itemStack;
@@ -281,9 +309,24 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
         }
     }
 
-    public static ItemStack setItemFrameColor(ItemStack itemStack, @Nullable DyedItemColor color) {
+    private ItemStack getPickResult(LevelReader level, BlockPos blockPos, BlockState blockState, boolean includeData, ItemFrameBlockEntity blockEntity) {
+        // it's fine to use proxy value as this is only called client-side
+        if (!CommonHelper.hasControlDown()
+                || ModLoaderEnvironment.INSTANCE.isClient() && !CommonHelper.getClientPlayer().isCreative()) {
+            ItemStack itemStack = blockEntity.getItem();
+            if (!itemStack.isEmpty()) {
+                return itemStack.copy();
+            }
+        }
+
+        return super.getCloneItemStack(level, blockPos, blockState, includeData);
+    }
+
+    public static ItemStack setItemStackColor(ItemStack itemStack, @Nullable DyedItemColor color) {
         if (color != null) {
             itemStack.set(DataComponents.DYED_COLOR, color);
+        } else {
+            itemStack.remove(DataComponents.DYED_COLOR);
         }
 
         return itemStack;
