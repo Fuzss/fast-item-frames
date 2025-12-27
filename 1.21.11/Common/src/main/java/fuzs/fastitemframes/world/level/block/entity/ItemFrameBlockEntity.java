@@ -284,15 +284,12 @@ public class ItemFrameBlockEntity extends BlockEntity implements TickingBlockEnt
         }
     }
 
-    public void markUpdated() {
-        if (this.hasLevel()) {
-            this.setChanged();
-            this.getLevel()
-                    .sendBlockUpdated(this.getBlockPos(),
-                            this.getBlockState(),
-                            this.getBlockState(),
-                            ItemFrameBlock.UPDATE_ALL);
-        }
+    public void markUpdated(ServerLevel serverLevel) {
+        this.setChanged();
+        serverLevel.sendBlockUpdated(this.getBlockPos(),
+                this.getBlockState(),
+                this.getBlockState(),
+                ItemFrameBlock.UPDATE_ALL);
     }
 
     @Override

@@ -3,9 +3,11 @@ package fuzs.fastitemframes;
 import fuzs.fastitemframes.config.ClientConfig;
 import fuzs.fastitemframes.config.ServerConfig;
 import fuzs.fastitemframes.handler.ItemFrameHandler;
+import fuzs.fastitemframes.handler.ReachBehindHandler;
 import fuzs.fastitemframes.init.ModRegistry;
 import fuzs.puzzleslib.api.config.v3.ConfigHolder;
 import fuzs.puzzleslib.api.core.v1.ModConstructor;
+import fuzs.puzzleslib.api.event.v1.core.EventPhase;
 import fuzs.puzzleslib.api.event.v1.entity.ServerEntityLevelEvents;
 import fuzs.puzzleslib.api.event.v1.entity.player.PlayerInteractEvents;
 import fuzs.puzzleslib.api.event.v1.level.BlockEvents;
@@ -46,6 +48,8 @@ public class FastItemFrames implements ModConstructor {
         ServerEntityLevelEvents.LOAD.register(ItemFrameHandler::onEntityLoad);
         PlayerInteractEvents.USE_ENTITY.register(ItemFrameHandler::onUseEntity);
         PlayerInteractEvents.ATTACK_ENTITY.register(ItemFrameHandler::onAttackEntity);
+        PlayerInteractEvents.USE_BLOCK.register(EventPhase.BEFORE, ReachBehindHandler::onUseBlock);
+        PlayerInteractEvents.USE_ENTITY.register(EventPhase.BEFORE, ReachBehindHandler::onUseEntity);
     }
 
     @Override

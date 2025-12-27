@@ -14,4 +14,9 @@ public class ServerConfig implements ConfigCore {
             "Allows for opening attached containers such as chests and crafting tables without clicking on them directly."
     })
     public boolean passClicksToAttachedBlock = true;
+    @Config(description = {
+            "Attempt interaction with the supporting block when clicking on an item frame before falling back to the item frame itself.",
+            "Allows for opening attached containers such as chests and crafting tables without clicking on them directly."
+    })
+    public boolean requiresEmptyHand = true;
 }
