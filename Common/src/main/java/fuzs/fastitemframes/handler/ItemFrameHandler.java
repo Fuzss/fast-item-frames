@@ -164,10 +164,9 @@ public class ItemFrameHandler {
 
     public static EventResult onAttackEntity(Player player, Level level, InteractionHand interactionHand, Entity entity) {
         if (entity.getType().is(ModRegistry.ITEM_FRAMES_ENTITY_TYPE_TAG) && entity instanceof ItemFrame itemFrame) {
-            if (!itemFrame.fixed && !itemFrame.getItem().isEmpty()) {
+            if (level instanceof ServerLevel serverLevel && !itemFrame.fixed && !itemFrame.getItem().isEmpty()) {
                 itemFrame.setInvisible(false);
-                if (level instanceof ServerLevel serverLevel && ModRegistry.WAXED_ITEM_FRAME_ATTACHMENT_TYPE.has(
-                        itemFrame)) {
+                if (ModRegistry.WAXED_ITEM_FRAME_ATTACHMENT_TYPE.has(itemFrame)) {
                     // Drop both the item frame and the item at the same time when waxed, as no new item can be inserted into an empty frame.
                     itemFrame.hurtServer(serverLevel, serverLevel.damageSources().playerAttack(player), 1.0F);
                 }

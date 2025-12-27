@@ -1,7 +1,7 @@
 package fuzs.fastitemframes.neoforge;
 
 import fuzs.fastitemframes.FastItemFrames;
-import fuzs.fastitemframes.data.ModBlockLootProvider;
+import fuzs.fastitemframes.data.loot.ModBlockLootProvider;
 import fuzs.fastitemframes.data.tags.ModBlockTagProvider;
 import fuzs.fastitemframes.data.tags.ModEntityTypeTagProvider;
 import fuzs.fastitemframes.data.tags.ModItemTagProvider;

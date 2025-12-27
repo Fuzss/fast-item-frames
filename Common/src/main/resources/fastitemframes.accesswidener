@@ -7,4 +7,3 @@ accessible  field   net/minecraft/world/item/HangingEntityItem  type    Lnet/min
 accessible	method	net/minecraft/client/renderer/entity/EntityRenderer	getNameTag	(Lnet/minecraft/world/entity/Entity;)Lnet/minecraft/network/chat/Component;
 accessible  field   net/minecraft/world/entity/decoration/ItemFrame DATA_ITEM   Lnet/minecraft/network/syncher/EntityDataAccessor;
 accessible  field   net/minecraft/world/entity/decoration/ItemFrame dropChance  F
-accessible  method  net/minecraft/client/Minecraft  startUseItem    ()V
