@@ -1,4 +1,4 @@
-package fuzs.fastitemframes.data;
+package fuzs.fastitemframes.data.loot;
 
 import fuzs.fastitemframes.init.ModRegistry;
 import fuzs.puzzleslib.api.data.v2.AbstractLootProvider;

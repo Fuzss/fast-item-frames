@@ -1,16 +1,13 @@
 package fuzs.fastitemframes.client;
 
 import fuzs.fastitemframes.client.handler.ClientEventHandler;
-import fuzs.fastitemframes.client.handler.ClientMenuProviderInteraction;
 import fuzs.fastitemframes.client.renderer.blockentity.ItemFrameBlockRenderer;
 import fuzs.fastitemframes.init.ModRegistry;
 import fuzs.fastitemframes.world.level.block.entity.ItemFrameBlockEntity;
 import fuzs.puzzleslib.api.client.core.v1.ClientModConstructor;
 import fuzs.puzzleslib.api.client.core.v1.context.BlockColorsContext;
 import fuzs.puzzleslib.api.client.core.v1.context.BlockEntityRenderersContext;
-import fuzs.puzzleslib.api.client.event.v1.entity.player.InteractionInputEvents;
 import fuzs.puzzleslib.api.client.event.v1.renderer.ExtractRenderStateCallback;
-import fuzs.puzzleslib.api.event.v1.core.EventPhase;
 import fuzs.puzzleslib.api.event.v1.entity.player.PlayerInteractEvents;
 import net.minecraft.client.color.block.BlockColor;
 import net.minecraft.core.BlockPos;
@@ -38,7 +35,6 @@ public class FastItemFramesClient implements ClientModConstructor {
     private static void registerEventHandlers() {
         PlayerInteractEvents.ATTACK_BLOCK.register(ClientEventHandler::onAttackBlock);
         ExtractRenderStateCallback.EVENT.register(ClientEventHandler::onExtractRenderState);
-        InteractionInputEvents.USE.register(EventPhase.BEFORE, ClientMenuProviderInteraction.INSTANCE::onUseInteraction);
     }
 
     @Override

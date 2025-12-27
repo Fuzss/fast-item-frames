@@ -2,12 +2,10 @@ package fuzs.fastitemframes;
 
 import fuzs.fastitemframes.config.ClientConfig;
 import fuzs.fastitemframes.config.ServerConfig;
-import fuzs.fastitemframes.handler.CommonMenuProviderInteraction;
 import fuzs.fastitemframes.handler.ItemFrameHandler;
 import fuzs.fastitemframes.init.ModRegistry;
 import fuzs.puzzleslib.api.config.v3.ConfigHolder;
 import fuzs.puzzleslib.api.core.v1.ModConstructor;
-import fuzs.puzzleslib.api.event.v1.core.EventPhase;
 import fuzs.puzzleslib.api.event.v1.entity.ServerEntityLevelEvents;
 import fuzs.puzzleslib.api.event.v1.entity.player.PlayerInteractEvents;
 import fuzs.puzzleslib.api.event.v1.level.BlockEvents;
@@ -48,8 +46,6 @@ public class FastItemFrames implements ModConstructor {
         ServerEntityLevelEvents.LOAD.register(ItemFrameHandler::onEntityLoad);
         PlayerInteractEvents.USE_ENTITY.register(ItemFrameHandler::onUseEntity);
         PlayerInteractEvents.ATTACK_ENTITY.register(ItemFrameHandler::onAttackEntity);
-        PlayerInteractEvents.USE_BLOCK.register(EventPhase.BEFORE, CommonMenuProviderInteraction.INSTANCE::onUseBlock);
-        PlayerInteractEvents.USE_ENTITY.register(EventPhase.BEFORE, CommonMenuProviderInteraction.INSTANCE::onUseEntity);
     }
 
     @Override
@@ -58,7 +54,7 @@ public class FastItemFrames implements ModConstructor {
         CauldronInteraction.WATER.map().put(Items.GLOW_ITEM_FRAME, FastItemFrames::dyedItemIteration);
     }
 
-    static InteractionResult dyedItemIteration(BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, ItemStack itemStack) {
+    private static InteractionResult dyedItemIteration(BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, ItemStack itemStack) {
         if (!itemStack.is(ItemTags.DYEABLE)) {
             return InteractionResult.TRY_WITH_EMPTY_HAND;
         } else if (!itemStack.has(DataComponents.DYED_COLOR)) {
