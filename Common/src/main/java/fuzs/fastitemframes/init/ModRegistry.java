@@ -12,6 +12,7 @@ import fuzs.puzzleslib.api.network.v4.PlayerSet;
 import net.minecraft.core.Holder;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.TagKey;
+import net.minecraft.util.Unit;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
@@ -49,12 +50,21 @@ public class ModRegistry {
 
     static final TagFactory TAGS = TagFactory.make(FastItemFrames.MOD_ID);
     public static final TagKey<Block> ITEM_FRAMES_BLOCK_TAG = TAGS.registerBlockTag("item_frames");
+    public static final TagKey<Block> PASSES_CLICKS_THROUGH_BLOCK_TAG = TAGS.registerBlockTag("passes_clicks_through");
+    public static final TagKey<Block> REQUIRES_DIRECT_CLICKS_BLOCK_TAG = TAGS.registerBlockTag("requires_direct_clicks");
+    public static final TagKey<Item> APPLIES_WAX_ITEM_TAG = TAGS.registerItemTag("applies_wax");
     public static final TagKey<EntityType<?>> ITEM_FRAMES_ENTITY_TYPE_TAG = TAGS.registerEntityTypeTag("item_frames");
+    public static final TagKey<EntityType<?>> PASSES_CLICKS_THROUGH_ENTITY_TYPE_TAG = TAGS.registerEntityTypeTag(
+            "passes_clicks_through");
 
     public static final DataAttachmentType<Entity, DyedItemColor> ITEM_FRAME_COLOR_ATTACHMENT_TYPE = DataAttachmentRegistry.<DyedItemColor>entityBuilder()
             .persistent(DyedItemColor.CODEC)
             .networkSynchronized(DyedItemColor.STREAM_CODEC, PlayerSet::nearEntity)
             .build(FastItemFrames.id("item_frame_color"));
+    public static final DataAttachmentType<Entity, Unit> WAXED_ITEM_FRAME_ATTACHMENT_TYPE = DataAttachmentRegistry.<Unit>entityBuilder()
+            .persistent(Unit.CODEC)
+            .networkSynchronized(Unit.STREAM_CODEC, PlayerSet::nearEntity)
+            .build(FastItemFrames.id("waxed_item_frame"));
 
     public static void bootstrap() {
         // NO-OP

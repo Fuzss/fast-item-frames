@@ -16,5 +16,6 @@ public class ModEntityTypeTagProvider extends AbstractTagProvider<EntityType<?>>
     @Override
     public void addTags(HolderLookup.Provider registries) {
         this.tag(ModRegistry.ITEM_FRAMES_ENTITY_TYPE_TAG).add(EntityType.ITEM_FRAME, EntityType.GLOW_ITEM_FRAME);
+        this.tag(ModRegistry.PASSES_CLICKS_THROUGH_ENTITY_TYPE_TAG).addTag(ModRegistry.ITEM_FRAMES_ENTITY_TYPE_TAG);
     }
 }

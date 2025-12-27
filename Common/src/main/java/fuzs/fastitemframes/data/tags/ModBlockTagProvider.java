@@ -20,5 +20,9 @@ public class ModBlockTagProvider extends AbstractTagProvider<Block> {
                 .add(ModRegistry.ITEM_FRAME_BLOCK.value(), ModRegistry.GLOW_ITEM_FRAME_BLOCK.value());
         this.tag(ModRegistry.ITEM_FRAMES_BLOCK_TAG)
                 .add(ModRegistry.ITEM_FRAME_BLOCK.value(), ModRegistry.GLOW_ITEM_FRAME_BLOCK.value());
+        this.tag(ModRegistry.PASSES_CLICKS_THROUGH_BLOCK_TAG)
+                .addTag(BlockTags.WALL_SIGNS, BlockTags.BANNERS)
+                .addTag(ModRegistry.ITEM_FRAMES_BLOCK_TAG);
+        this.tag(ModRegistry.REQUIRES_DIRECT_CLICKS_BLOCK_TAG);
     }
 }
