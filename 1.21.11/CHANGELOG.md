@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Move most block properties from the internal item frame entity to the block state
 
+### Removed
+
+- Remove passing clicks through item frames to attached container blocks (like chests), which will come back in a
+  separate more feature complete mod
+
 ## [v21.11.0-1.21.11] - 2025-12-17
 
 ### Added
