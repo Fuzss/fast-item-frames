@@ -105,65 +105,51 @@ public class ItemFrameHandler {
         }
     }
 
-    public static BlockHitResult getAttachedBlockHitResult(Entity entity) {
-        return getBlockHitResult(entity, entity.blockPosition().relative(entity.getDirection().getOpposite()));
-    }
-
-    public static BlockHitResult getBlockHitResult(Entity entity, BlockPos blockPos) {
-        return new BlockHitResult(Vec3.atCenterOf(BlockPos.ZERO), entity.getDirection(), blockPos, false);
+    private static BlockHitResult getAttachedBlockHitResult(Entity entity) {
+        BlockPos blockPos = entity.blockPosition();
+        BlockPos neihgborBlockPos = blockPos.relative(entity.getDirection().getOpposite());
+        // The vector is mostly used for distance from the player checks, which should remain at the original position.
+        return new BlockHitResult(Vec3.atCenterOf(blockPos), entity.getDirection(), neihgborBlockPos, false);
     }
 
     public static EventResultHolder<InteractionResult> onUseEntity(Player player, Level level, InteractionHand interactionHand, Entity entity) {
         if (entity.getType().is(ModRegistry.ITEM_FRAMES_ENTITY_TYPE_TAG) && entity instanceof ItemFrame itemFrame) {
-            ItemStack itemInHand = player.getItemInHand(interactionHand);
-            if (false && FastItemFrames.CONFIG.get(ServerConfig.class).passClicksToAttachedBlock) {
-                if (ReachBehindHandler.interactWithAttachedBlockWhenClicked(player,
-                        itemFrame.fixed || ModRegistry.WAXED_ITEM_FRAME_ATTACHMENT_TYPE.has(itemFrame),
-                        itemInHand)) {
-                    BlockPos blockPos = itemFrame.blockPosition().relative(itemFrame.getDirection().getOpposite());
-                    InteractionResult interactionResult = ReachBehindHandler.passClicksToAttachedBlock(level,
-                            player,
-                            blockPos,
-                            getAttachedBlockHitResult(itemFrame));
-                    if (interactionResult != null) {
-                        return EventResultHolder.interrupt(interactionResult);
-                    }
-                }
+            if (itemFrame.fixed) {
+                return EventResultHolder.pass();
             }
 
             if (ModRegistry.WAXED_ITEM_FRAME_ATTACHMENT_TYPE.has(itemFrame)) {
                 return EventResultHolder.interrupt(InteractionResult.PASS);
             }
 
-            if (!itemFrame.fixed) {
-                if (player.isSecondaryUseActive()) {
-                    // The entity requires additional checks compared to the block.
-                    if (player.getMainHandItem().isEmpty() && player.getOffhandItem().isEmpty()) {
-                        // Support toggling invisibility via shift+right-clicking with an empty hand.
-                        if (!itemFrame.getItem().isEmpty()) {
-                            itemFrame.setInvisible(!itemFrame.isInvisible());
-                            if (level instanceof ServerLevel) {
-                                itemFrame.playSound(itemFrame.getRotateItemSound(), 1.0F, 1.0F);
-                                itemFrame.gameEvent(GameEvent.BLOCK_CHANGE, player);
-                            }
-
-                            return EventResultHolder.interrupt(InteractionResult.SUCCESS);
-                        }
-                    }
-                } else {
-                    if (!itemFrame.getItem().isEmpty() && itemInHand.is(ModRegistry.APPLIES_WAX_ITEM_TAG)) {
-                        ModRegistry.WAXED_ITEM_FRAME_ATTACHMENT_TYPE.set(itemFrame, Unit.INSTANCE);
-                        if (level instanceof ServerLevel serverLevel) {
-                            serverLevel.levelEvent(null,
-                                    LevelEvent.PARTICLES_AND_SOUND_WAX_ON,
-                                    itemFrame.blockPosition(),
-                                    0);
-                            serverLevel.gameEvent(player, GameEvent.BLOCK_CHANGE, itemFrame.blockPosition());
-                            itemInHand.consume(1, player);
+            if (player.isSecondaryUseActive()) {
+                // The entity requires additional checks compared to the block.
+                if (player.getMainHandItem().isEmpty() && player.getOffhandItem().isEmpty()) {
+                    // Support toggling invisibility via shift+right-clicking with an empty hand.
+                    if (!itemFrame.getItem().isEmpty()) {
+                        itemFrame.setInvisible(!itemFrame.isInvisible());
+                        if (level instanceof ServerLevel) {
+                            itemFrame.playSound(itemFrame.getRotateItemSound(), 1.0F, 1.0F);
+                            itemFrame.gameEvent(GameEvent.BLOCK_CHANGE, player);
                         }
 
                         return EventResultHolder.interrupt(InteractionResult.SUCCESS);
                     }
+                }
+            } else {
+                ItemStack itemInHand = player.getItemInHand(interactionHand);
+                if (!itemFrame.getItem().isEmpty() && itemInHand.is(ModRegistry.APPLIES_WAX_ITEM_TAG)) {
+                    ModRegistry.WAXED_ITEM_FRAME_ATTACHMENT_TYPE.set(itemFrame, Unit.INSTANCE);
+                    if (level instanceof ServerLevel serverLevel) {
+                        serverLevel.levelEvent(null,
+                                LevelEvent.PARTICLES_AND_SOUND_WAX_ON,
+                                itemFrame.blockPosition(),
+                                0);
+                        serverLevel.gameEvent(player, GameEvent.BLOCK_CHANGE, itemFrame.blockPosition());
+                        itemInHand.consume(1, player);
+                    }
+
+                    return EventResultHolder.interrupt(InteractionResult.SUCCESS);
                 }
             }
 
