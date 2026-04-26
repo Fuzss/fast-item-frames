@@ -44,6 +44,7 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.EntityCollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -135,7 +136,7 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     }
 
     /**
-     * @see ItemFrame#interact(Player, InteractionHand)
+     * @see ItemFrame#interact(Player, InteractionHand, Vec3)
      */
     public InteractionResult interact(ItemFrameBlockEntity blockEntity, ItemStack itemInHand, BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand) {
         if (blockState.getValue(ItemFrameBlock.WAXED)) {
