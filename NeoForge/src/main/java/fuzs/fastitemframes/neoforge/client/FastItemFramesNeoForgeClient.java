@@ -1,9 +1,9 @@
 package fuzs.fastitemframes.neoforge.client;
 
-import fuzs.fastitemframes.FastItemFrames;
-import fuzs.fastitemframes.client.FastItemFramesClient;
-import fuzs.fastitemframes.data.client.ModModelProvider;
-import fuzs.puzzleslib.api.client.core.v1.ClientModConstructor;
+import fuzs.fastitemframes.common.FastItemFrames;
+import fuzs.fastitemframes.common.client.FastItemFramesClient;
+import fuzs.fastitemframes.common.data.client.ModModelProvider;
+import fuzs.puzzleslib.common.api.client.core.v1.ClientModConstructor;
 import fuzs.puzzleslib.neoforge.api.data.v2.core.DataProviderHelper;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.common.Mod;

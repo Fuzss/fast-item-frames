@@ -1,9 +1,10 @@
 {
+    "minecraft": "26.1.2",
     "mod": {
         "id": "fastitemframes",
         "group": "fuzs.fastitemframes",
         "name": "Fast Item Frames",
-        "version": "21.11.1",
+        "version": "26.1.0",
         "authors": [
             "Fuzs"
         ],
@@ -36,13 +37,13 @@
     ],
     "links": [
         {
-            "name": "github",
-            "slug": "fastitemframes"
-        },
-        {
             "name": "curseforge",
             "slug": "fast-item-frames",
             "id": "1210171"
+        },
+        {
+            "name": "github",
+            "slug": "fast-item-frames"
         },
         {
             "name": "modrinth",

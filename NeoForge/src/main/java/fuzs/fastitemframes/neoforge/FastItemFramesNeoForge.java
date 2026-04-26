@@ -1,11 +1,12 @@
 package fuzs.fastitemframes.neoforge;
 
-import fuzs.fastitemframes.FastItemFrames;
-import fuzs.fastitemframes.data.loot.ModBlockLootProvider;
-import fuzs.fastitemframes.data.tags.ModBlockTagProvider;
-import fuzs.fastitemframes.data.tags.ModEntityTypeTagProvider;
-import fuzs.fastitemframes.data.tags.ModItemTagProvider;
-import fuzs.puzzleslib.api.core.v1.ModConstructor;
+import fuzs.fastitemframes.common.FastItemFrames;
+import fuzs.fastitemframes.common.data.ModRecipeProvider;
+import fuzs.fastitemframes.common.data.loot.ModBlockLootProvider;
+import fuzs.fastitemframes.common.data.tags.ModBlockTagProvider;
+import fuzs.fastitemframes.common.data.tags.ModEntityTypeTagProvider;
+import fuzs.fastitemframes.common.data.tags.ModItemTagProvider;
+import fuzs.puzzleslib.common.api.core.v1.ModConstructor;
 import fuzs.puzzleslib.neoforge.api.data.v2.core.DataProviderHelper;
 import net.neoforged.fml.common.Mod;
 
@@ -18,6 +19,7 @@ public class FastItemFramesNeoForge {
                 ModBlockLootProvider::new,
                 ModBlockTagProvider::new,
                 ModItemTagProvider::new,
-                ModEntityTypeTagProvider::new);
+                ModEntityTypeTagProvider::new,
+                ModRecipeProvider::new);
     }
 }

@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_dye",
+  "category": "misc",
+  "dye": "#minecraft:dyes",
+  "group": "item_frame",
+  "result": {
+    "id": "minecraft:glow_item_frame"
+  },
+  "target": "minecraft:glow_item_frame"
+}

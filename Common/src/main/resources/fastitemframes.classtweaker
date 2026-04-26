@@ -3,7 +3,8 @@ accessible  field   net/minecraft/world/entity/decoration/ItemFrame fixed   Z
 accessible  method  net/minecraft/world/entity/decoration/ItemFrame setDirection    (Lnet/minecraft/core/Direction;)V
 accessible  method  net/minecraft/world/entity/decoration/ItemFrame dropItem    (Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;Z)V
 accessible  method  net/minecraft/world/entity/decoration/ItemFrame getFrameItemStack   ()Lnet/minecraft/world/item/ItemStack;
+accessible  method  net/minecraft/world/entity/decoration/GlowItemFrame getFrameItemStack   ()Lnet/minecraft/world/item/ItemStack;
 accessible  field   net/minecraft/world/item/HangingEntityItem  type    Lnet/minecraft/world/entity/EntityType;
-accessible	method	net/minecraft/client/renderer/entity/EntityRenderer	getNameTag	(Lnet/minecraft/world/entity/Entity;)Lnet/minecraft/network/chat/Component;
 accessible  field   net/minecraft/world/entity/decoration/ItemFrame DATA_ITEM   Lnet/minecraft/network/syncher/EntityDataAccessor;
 accessible  field   net/minecraft/world/entity/decoration/ItemFrame dropChance  F
+transitive-accessible   field   net/minecraft/client/Minecraft  blockModelResolver  Lnet/minecraft/client/renderer/block/BlockModelResolver;
