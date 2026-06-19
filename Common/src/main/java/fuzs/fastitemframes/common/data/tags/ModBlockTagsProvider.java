@@ -8,17 +8,16 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.Block;
 
-public class ModBlockTagProvider extends AbstractTagProvider<Block> {
+public class ModBlockTagsProvider extends AbstractTagProvider<Block> {
 
-    public ModBlockTagProvider(DataProviderContext context) {
+    public ModBlockTagsProvider(DataProviderContext context) {
         super(Registries.BLOCK, context);
     }
 
     @Override
     public void addTags(HolderLookup.Provider registries) {
-        this.tag(BlockTags.MINEABLE_WITH_AXE)
-                .add(ModRegistry.ITEM_FRAME_BLOCK.value(), ModRegistry.GLOW_ITEM_FRAME_BLOCK.value());
+        this.tag(BlockTags.MINEABLE_WITH_AXE).add(ModRegistry.ITEM_FRAME_BLOCK, ModRegistry.GLOW_ITEM_FRAME_BLOCK);
         this.tag(ModRegistry.ITEM_FRAMES_BLOCK_TAG)
-                .add(ModRegistry.ITEM_FRAME_BLOCK.value(), ModRegistry.GLOW_ITEM_FRAME_BLOCK.value());
+                .add(ModRegistry.ITEM_FRAME_BLOCK, ModRegistry.GLOW_ITEM_FRAME_BLOCK);
     }
 }

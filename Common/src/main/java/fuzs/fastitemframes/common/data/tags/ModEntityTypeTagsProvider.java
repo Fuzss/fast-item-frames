@@ -6,15 +6,16 @@ import fuzs.puzzleslib.common.api.data.v2.tags.AbstractTagProvider;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypeIds;
 
-public class ModEntityTypeTagProvider extends AbstractTagProvider<EntityType<?>> {
+public class ModEntityTypeTagsProvider extends AbstractTagProvider<EntityType<?>> {
 
-    public ModEntityTypeTagProvider(DataProviderContext context) {
+    public ModEntityTypeTagsProvider(DataProviderContext context) {
         super(Registries.ENTITY_TYPE, context);
     }
 
     @Override
     public void addTags(HolderLookup.Provider registries) {
-        this.tag(ModRegistry.ITEM_FRAMES_ENTITY_TYPE_TAG).add(EntityType.ITEM_FRAME, EntityType.GLOW_ITEM_FRAME);
+        this.tag(ModRegistry.ITEM_FRAMES_ENTITY_TYPE_TAG).add(EntityTypeIds.ITEM_FRAME, EntityTypeIds.GLOW_ITEM_FRAME);
     }
 }

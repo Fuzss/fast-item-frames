@@ -15,6 +15,7 @@ import net.minecraft.util.Unit;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -48,9 +49,9 @@ public class ItemFrameHandler {
         return EventResult.PASS;
     }
 
-    public static EventResult onEntityLoad(Entity entity, ServerLevel serverLevel, boolean isNewlySpawned) {
+    public static void onEntityLoad(Entity entity, ServerLevel serverLevel, boolean isLoadedFromDisk, @Nullable EntitySpawnReason entitySpawnReason) {
         if (entity.is(ModRegistry.ITEM_FRAMES_ENTITY_TYPE_TAG) && entity instanceof ItemFrame itemFrame) {
-            if (isNewlySpawned || FastItemFrames.CONFIG.get(ServerConfig.class).convertAllExistingItemFrames) {
+            if (!isLoadedFromDisk || FastItemFrames.CONFIG.get(ServerConfig.class).convertAllExistingItemFrames) {
                 serverLevel.getServer().schedule(new TickTask(serverLevel.getServer().getTickCount(), () -> {
                     Block block = ItemFrameBlock.BY_ITEM.get(itemFrame.getFrameItemStack().getItem());
                     BlockPos blockPos = itemFrame.blockPosition();
@@ -68,8 +69,6 @@ public class ItemFrameHandler {
                 }));
             }
         }
-
-        return EventResult.PASS;
     }
 
     private static @Nullable BlockState getItemFrameStateForPlacement(ServerLevel serverLevel, Block block, BlockPos blockPos, ItemFrame itemFrame) {

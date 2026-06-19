@@ -23,7 +23,6 @@ import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.EntityAttachment;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -98,7 +97,7 @@ public class ItemFrameBlockRenderer implements BlockEntityRenderer<ItemFrameBloc
                 null,
                 0);
         renderState.rotation = blockEntity.getBlockState().getValue(ItemFrameBlock.ROTATION);
-        renderState.isGlowFrame = blockEntity.getEntityType() == EntityType.GLOW_ITEM_FRAME;
+        renderState.isGlowFrame = blockEntity.isGlowItemFrame();
         renderState.mapId = null;
         if (!itemStack.isEmpty() && blockEntity.hasLevel()) {
             MapId mapId = blockEntity.getFramedMapId(itemStack);
@@ -134,9 +133,10 @@ public class ItemFrameBlockRenderer implements BlockEntityRenderer<ItemFrameBloc
      * @see net.minecraft.client.renderer.entity.ItemFrameRenderer#shouldShowName(ItemFrame, double)
      */
     protected boolean shouldShowName(ItemFrameBlockEntity blockEntity, Vec3 cameraPosition) {
-        if (Minecraft.renderNames() && !blockEntity.getItem().isEmpty() && blockEntity.getItem()
+        Minecraft minecraft = Minecraft.getInstance();
+        if (!minecraft.gui.hud.isHidden() && !blockEntity.getItem().isEmpty() && blockEntity.getItem()
                 .has(DataComponents.CUSTOM_NAME)) {
-            HitResult hitResult = Minecraft.getInstance().hitResult;
+            HitResult hitResult = minecraft.hitResult;
             if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK && blockEntity.getBlockPos()
                     .equals((((BlockHitResult) hitResult).getBlockPos()))) {
                 double distanceToEntity = cameraPosition.distanceToSqr(Vec3.atCenterOf(blockEntity.getBlockPos()));

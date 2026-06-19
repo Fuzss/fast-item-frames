@@ -6,7 +6,7 @@ import fuzs.fastitemframes.common.handler.ItemFrameHandler;
 import fuzs.fastitemframes.common.init.ModRegistry;
 import fuzs.puzzleslib.common.api.config.v3.ConfigHolder;
 import fuzs.puzzleslib.common.api.core.v1.ModConstructor;
-import fuzs.puzzleslib.common.api.event.v1.entity.ServerEntityLevelEvents;
+import fuzs.puzzleslib.common.api.event.v1.entity.ServerEntityEvents;
 import fuzs.puzzleslib.common.api.event.v1.entity.player.PlayerInteractEvents;
 import fuzs.puzzleslib.common.api.event.v1.level.BlockEvents;
 import net.minecraft.resources.Identifier;
@@ -30,7 +30,7 @@ public class FastItemFrames implements ModConstructor {
 
     private static void registerEventHandlers() {
         BlockEvents.BREAK.register(ItemFrameHandler::onBreakBlock);
-        ServerEntityLevelEvents.LOAD.register(ItemFrameHandler::onEntityLoad);
+        ServerEntityEvents.LOAD.register(ItemFrameHandler::onEntityLoad);
         PlayerInteractEvents.USE_ENTITY.register(ItemFrameHandler::onUseEntity);
         PlayerInteractEvents.ATTACK_ENTITY.register(ItemFrameHandler::onAttackEntity);
     }

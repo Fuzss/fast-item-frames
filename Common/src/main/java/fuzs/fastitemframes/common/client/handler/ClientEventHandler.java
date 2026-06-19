@@ -49,7 +49,7 @@ public class ClientEventHandler {
                 BlockState blockState = ItemFrameBlockRenderer.getItemFrameBlockState(state.isGlowFrame,
                         state.mapId != null,
                         true);
-                Minecraft.getInstance().blockModelResolver.update(state.frameModel,
+                Minecraft.getInstance().getEntityRenderDispatcher().blockModelResolver.update(state.frameModel,
                         blockState,
                         ItemFrameRenderer.BLOCK_DISPLAY_CONTEXT);
                 state.frameModel.tintLayers().clear();
