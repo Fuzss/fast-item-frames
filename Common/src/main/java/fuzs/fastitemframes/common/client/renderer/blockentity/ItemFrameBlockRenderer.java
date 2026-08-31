@@ -95,8 +95,8 @@ public class ItemFrameBlockRenderer implements BlockEntityRenderer<ItemFrameBloc
                 itemStack,
                 ItemDisplayContext.FIXED,
                 blockEntity.getLevel(),
-                null,
-                0);
+                blockEntity.hasLevel() ? blockEntity : null,
+                blockEntity.getId());
         renderState.rotation = blockEntity.getBlockState().getValue(ItemFrameBlock.ROTATION);
         renderState.isGlowFrame = blockEntity.getEntityType() == EntityType.GLOW_ITEM_FRAME;
         renderState.mapId = null;
