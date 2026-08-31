@@ -5,6 +5,7 @@ import fuzs.fastitemframes.common.init.ModRegistry;
 import fuzs.fastitemframes.common.world.level.block.ItemFrameBlock;
 import fuzs.puzzleslib.common.api.block.v1.entity.TickingBlockEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.component.DataComponentGetter;
@@ -18,12 +19,10 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Mth;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EntityTypeIds;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -32,6 +31,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.MapItem;
 import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.ListBackedContainer;
 import net.minecraft.world.level.block.state.BlockState;
@@ -42,7 +42,9 @@ import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
-public class ItemFrameBlockEntity extends BlockEntity implements TickingBlockEntity, ListBackedContainer {
+import java.util.Objects;
+
+public class ItemFrameBlockEntity extends BlockEntity implements TickingBlockEntity, ListBackedContainer, ItemOwner {
     public static final String TAG_COLOR = "color";
     public static final String TAG_ITEM_DROP_CHANCE = "item_drop_chance";
     public static final float DEFAULT_DROP_CHANCE = 1.0F;
@@ -57,6 +59,33 @@ public class ItemFrameBlockEntity extends BlockEntity implements TickingBlockEnt
 
     public ItemFrameBlockEntity(BlockPos pos, BlockState blockState) {
         super(ModRegistry.ITEM_FRAME_BLOCK_ENTITY.value(), pos, blockState);
+    }
+
+    public int getId() {
+        return (int) this.getBlockPos().asLong();
+    }
+
+    @Override
+    public Level level() {
+        return Objects.requireNonNull(this.getLevel());
+    }
+
+    @Override
+    public Vec3 position() {
+        return Vec3.atCenterOf(this.getBlockPos());
+    }
+
+    /**
+     * @see ItemFrame#getVisualRotationYInDegrees()
+     */
+    @Override
+    public float getVisualRotationYInDegrees() {
+        Direction frameDirection = this.getBlockState().getValue(ItemFrameBlock.FACING);
+        int rotationCorrection =
+                frameDirection.getAxis().isVertical() ? 90 * frameDirection.getAxisDirection().getStep() : 0;
+        int frameRotation = this.getBlockState().getValue(ItemFrameBlock.ROTATION);
+        return (float) Mth.wrapDegrees(
+                180 + frameDirection.get2DDataValue() * 90 + frameRotation * 45 + rotationCorrection);
     }
 
     @Override
@@ -91,7 +120,7 @@ public class ItemFrameBlockEntity extends BlockEntity implements TickingBlockEnt
         }
 
         if (blockState != this.getBlockState()) {
-            serverLevel.setBlock(this.getBlockPos(), blockState, ItemFrameBlock.UPDATE_ALL);
+            serverLevel.setBlock(this.getBlockPos(), blockState, Block.UPDATE_ALL);
         }
     }
 
@@ -99,7 +128,7 @@ public class ItemFrameBlockEntity extends BlockEntity implements TickingBlockEnt
         ItemFrame itemFrame = this.getEntityType().create(serverLevel, EntitySpawnReason.LOAD);
         if (itemFrame != null) {
             itemFrame.getEntityData().set(ItemFrame.DATA_ITEM, this.getItem());
-            itemFrame.setPos(Vec3.atCenterOf(this.getBlockPos()));
+            itemFrame.setPos(this.position());
             itemFrame.setDirection(this.getBlockState().getValue(ItemFrameBlock.FACING));
         }
 
@@ -295,9 +324,9 @@ public class ItemFrameBlockEntity extends BlockEntity implements TickingBlockEnt
     }
 
     @Override
-    protected void applyImplicitComponents(DataComponentGetter dataComponentGetter) {
-        super.applyImplicitComponents(dataComponentGetter);
-        this.color = dataComponentGetter.get(DataComponents.DYED_COLOR);
+    protected void applyImplicitComponents(DataComponentGetter components) {
+        super.applyImplicitComponents(components);
+        this.color = components.get(DataComponents.DYED_COLOR);
     }
 
     @Override
@@ -309,7 +338,7 @@ public class ItemFrameBlockEntity extends BlockEntity implements TickingBlockEnt
     }
 
     @Override
-    public void removeComponentsFromTag(ValueOutput valueOutput) {
-        valueOutput.discard(TAG_COLOR);
+    public void removeComponentsFromTag(ValueOutput output) {
+        output.discard(TAG_COLOR);
     }
 }
