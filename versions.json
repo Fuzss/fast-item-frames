@@ -6,11 +6,17 @@
     "26.1.x": "maintained",
     "26.2.x": "primary"
   },
-  "properties": {
-    "distributions.curseforge.id": "1210171",
-    "distributions.curseforge.slug": "fast-item-frames",
-    "distributions.github.slug": "fast-item-frames",
-    "distributions.modrinth.id": "FsoeTIV0",
-    "distributions.modrinth.slug": "fast-item-frames"
+  "distributions": {
+    "curseforge": {
+      "id": "1210171",
+      "slug": "fast-item-frames"
+    },
+    "github": {
+      "slug": "fast-item-frames"
+    },
+    "modrinth": {
+      "id": "FsoeTIV0",
+      "slug": "fast-item-frames"
+    }
   }
 }
