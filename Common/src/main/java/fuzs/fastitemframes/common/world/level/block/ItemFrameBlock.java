@@ -1,7 +1,5 @@
 package fuzs.fastitemframes.common.world.level.block;
 
-import com.mojang.serialization.MapCodec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import fuzs.fastitemframes.common.init.ModRegistry;
 import fuzs.fastitemframes.common.world.level.block.entity.ItemFrameBlockEntity;
 import fuzs.puzzleslib.common.api.block.v1.entity.TickingEntityBlock;
@@ -11,7 +9,6 @@ import fuzs.puzzleslib.common.api.util.v1.ShapesHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
@@ -54,9 +51,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterloggedBlock, TickingEntityBlock<ItemFrameBlockEntity> {
-    public static final MapCodec<ItemFrameBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-            BuiltInRegistries.ITEM.byNameCodec().fieldOf("item").forGetter(itemFrame -> itemFrame.item),
-            propertiesCodec()).apply(instance, ItemFrameBlock::new));
     public static final EnumProperty<Direction> FACING = BlockStateProperties.FACING;
     public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
     public static final IntegerProperty ROTATION = IntegerProperty.create("rotation", 0, ItemFrame.NUM_ROTATIONS - 1);
@@ -88,11 +82,6 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     }
 
     @Override
-    protected MapCodec<? extends ItemFrameBlock> codec() {
-        return CODEC;
-    }
-
-    @Override
     public Item asItem() {
         return this.item;
     }
@@ -119,7 +108,7 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
             } else {
                 if (!blockEntity.getItem().isEmpty() && itemInHand.is(ModRegistry.APPLIES_WAX_ITEM_TAG)) {
                     if (level instanceof ServerLevel serverLevel) {
-                        serverLevel.levelEvent(null, LevelEvent.PARTICLES_AND_SOUND_WAX_ON, blockPos, 0);
+                        serverLevel.levelEvent(null, LevelEvent.PARTICLES_WAX_ON, blockPos, 0);
                         serverLevel.setBlock(blockPos, blockState.cycle(WAXED), Block.UPDATE_ALL);
                         serverLevel.gameEvent(player, GameEvent.BLOCK_CHANGE, blockPos);
                         itemInHand.consume(1, player);
@@ -182,7 +171,7 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
         if (context instanceof EntityCollisionContext entityCollisionContext
                 && entityCollisionContext.getEntity() instanceof Projectile projectile) {
             if (blockGetter instanceof ServerLevel serverLevel && projectile.mayInteract(serverLevel, blockPos)
-                    && projectile.mayBreak(serverLevel)) {
+                    && projectile.mayBreak(serverLevel, blockPos)) {
                 return this.getShape(blockState, blockGetter, blockPos, context);
             }
         }
@@ -254,7 +243,7 @@ public class ItemFrameBlock extends BaseEntityBlock implements SimpleWaterlogged
     public void onProjectileHit(Level level, BlockState blockState, BlockHitResult hitResult, Projectile projectile) {
         BlockPos blockPos = hitResult.getBlockPos();
         if (level instanceof ServerLevel serverLevel && projectile.mayInteract(serverLevel, blockPos)
-                && projectile.mayBreak(serverLevel)) {
+                && projectile.mayBreak(serverLevel, blockPos)) {
             level.destroyBlock(blockPos, true, projectile);
             // update potentially attached comparators
             level.updateNeighborsAt(blockPos, this);

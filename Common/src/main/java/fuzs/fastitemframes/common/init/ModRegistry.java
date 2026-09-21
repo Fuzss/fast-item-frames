@@ -75,7 +75,7 @@ public class ModRegistry {
                 .strength(1.0F)
                 .ignitedByLava()
                 .instabreak()
-                .pushReaction(PushReaction.DESTROY)
+                .pushReaction(PushReaction.POPPED)
                 .sound(soundType)
                 .overrideDescription(item.getDescriptionId());
     }

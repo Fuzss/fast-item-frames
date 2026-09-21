@@ -8,7 +8,7 @@ import fuzs.fastitemframes.common.config.ClientConfig;
 import fuzs.fastitemframes.common.init.ModRegistry;
 import fuzs.fastitemframes.common.world.level.block.ItemFrameBlock;
 import fuzs.fastitemframes.common.world.level.block.entity.ItemFrameBlockEntity;
-import fuzs.puzzleslib.common.api.client.renderer.v1.RenderStateExtraData;
+import fuzs.puzzleslib.common.api.client.renderer.v2.RenderStateExtraData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MapRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;

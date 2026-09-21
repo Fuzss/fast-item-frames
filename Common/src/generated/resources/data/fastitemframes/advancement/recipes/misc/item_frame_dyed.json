@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:item_frame_dyed"
+        "recipes": "fastitemframes:item_frame_dyed"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
@@ -26,7 +26,7 @@
   ],
   "rewards": {
     "recipes": [
-      "minecraft:item_frame_dyed"
+      "fastitemframes:item_frame_dyed"
     ]
   }
 }

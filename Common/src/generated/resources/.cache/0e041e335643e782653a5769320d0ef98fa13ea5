@@ -1,0 +1,7 @@
+// 26.3	2026-09-21T23:16:46.028122	Registries for reloadable
+0ce6770dcb2e4e5066a4bba599dd44340d509c51 data/fastitemframes/advancement/recipes/misc/glow_item_frame_dyed.json
+3709d97c1378dd69f74a09c899308c5a975fc865 data/fastitemframes/advancement/recipes/misc/item_frame_dyed.json
+40764cd50fa89b32b9c59e6455356411c0aa15f1 data/fastitemframes/loot_table/blocks/glow_item_frame.json
+bbd67c290945207fe92416d1e396e640aaaa1c21 data/fastitemframes/loot_table/blocks/item_frame.json
+2da237963908429d05da4745ef567710bba6e397 data/fastitemframes/recipe/glow_item_frame_dyed.json
+add7c4f134c15374690bebab0d94e703e33a05bb data/fastitemframes/recipe/item_frame_dyed.json

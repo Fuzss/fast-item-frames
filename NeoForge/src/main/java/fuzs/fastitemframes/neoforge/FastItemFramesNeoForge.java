@@ -7,7 +7,8 @@ import fuzs.fastitemframes.common.data.tags.ModBlockTagsProvider;
 import fuzs.fastitemframes.common.data.tags.ModEntityTypeTagsProvider;
 import fuzs.fastitemframes.common.data.tags.ModItemTagsProvider;
 import fuzs.puzzleslib.common.api.core.v1.ModConstructor;
-import fuzs.puzzleslib.neoforge.api.data.v2.core.DataProviderHelper;
+import fuzs.puzzleslib.neoforge.api.data.v3.core.DataProviderBuilder;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.neoforged.fml.common.Mod;
 
 @Mod(FastItemFrames.MOD_ID)
@@ -15,11 +16,9 @@ public class FastItemFramesNeoForge {
 
     public FastItemFramesNeoForge() {
         ModConstructor.construct(FastItemFrames.MOD_ID, FastItemFrames::new);
-        DataProviderHelper.registerDataProviders(FastItemFrames.MOD_ID,
-                ModBlockLootProvider::new,
-                ModBlockTagsProvider::new,
-                ModItemTagsProvider::new,
-                ModEntityTypeTagsProvider::new,
-                ModRecipeProvider::new);
+        DataProviderBuilder.of(FastItemFrames.MOD_ID)
+                .addLootProvider(ModBlockLootProvider::new, LootContextParamSets.BLOCK)
+                .addProvider(ModBlockTagsProvider::new, ModItemTagsProvider::new, ModEntityTypeTagsProvider::new)
+                .addRecipeProvider(ModRecipeProvider::new);
     }
 }

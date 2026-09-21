@@ -141,7 +141,7 @@ public class ItemFrameHandler {
                     ModRegistry.WAXED_ITEM_FRAME_ATTACHMENT_TYPE.set(itemFrame, Unit.INSTANCE);
                     if (level instanceof ServerLevel serverLevel) {
                         serverLevel.levelEvent(null,
-                                LevelEvent.PARTICLES_AND_SOUND_WAX_ON,
+                                LevelEvent.PARTICLES_WAX_ON,
                                 itemFrame.blockPosition(),
                                 0);
                         serverLevel.gameEvent(player, GameEvent.BLOCK_CHANGE, itemFrame.blockPosition());

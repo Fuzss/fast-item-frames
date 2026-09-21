@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import fuzs.fastitemframes.common.FastItemFrames;
 import fuzs.fastitemframes.common.client.handler.ClientEventHandler;
 import fuzs.fastitemframes.common.config.ClientConfig;
-import fuzs.puzzleslib.common.api.client.renderer.v1.RenderStateExtraData;
+import fuzs.puzzleslib.common.api.client.renderer.v2.RenderStateExtraData;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
